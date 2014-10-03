@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" hash="1460343030">
+    <data-source source="LOCAL" name="hibernate.cfg.xml" uuid="46b162a3-6f23-4858-9f71-dab01c3cee21">
+      <driver-ref>mysql</driver-ref>
+      <jdbc-driver>com.mysql.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://localhost:3306/roomies</jdbc-url>
+      <user-name>root</user-name>
+      <user-password>dfe9dfc2dfd8dfc5dfc7dfc4dfcbdf9bdf92dfcb</user-password>
+      <libraries>
+        <library>
+          <url>file://C:\Users\dell\.m2\repository\mysql\mysql-connector-java\5.1.31\mysql-connector-java-5.1.31.jar</url>
+        </library>
+      </libraries>
+    </data-source>
+    <data-source source="LOCAL" name="roomies" uuid="0ce23bcc-d467-47a2-a163-d0e39b156646">
+      <driver-ref>mysql</driver-ref>
+      <jdbc-driver>com.mysql.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://localhost:3306/roomies</jdbc-url>
+      <user-name>root</user-name>
+      <user-password>dfe9dfc2dfd8dfc5dfc7dfc4dfcbdf9bdf92dfcb</user-password>
+      <libraries>
+        <library>
+          <url>file://C:\Users\dell\.m2\repository\mysql\mysql-connector-java\5.1.31\mysql-connector-java-5.1.31.jar</url>
+        </library>
+      </libraries>
+    </data-source>
+  </component>
+</project>
+
