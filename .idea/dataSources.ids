@@ -1974,14 +1974,12 @@
     </table>
     <table name="user" schema="" catalog="roomies" type="TABLE">
       <column name="id" sqlType="BIGINT" precision="19" scale="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
-      <column name="age" sqlType="INT" precision="10" scale="0" nullable="false" jdbcType="4"/>
-      <column name="login" sqlType="VARCHAR" precision="30" scale="0" nullable="false" jdbcType="12"/>
+      <column name="uuid" sqlType="VARCHAR" precision="255" scale="0" nullable="true" jdbcType="12"/>
       <column name="mail" sqlType="VARCHAR" precision="255" scale="0" nullable="false" jdbcType="12"/>
-      <column name="name" sqlType="VARCHAR" precision="30" scale="0" nullable="true" jdbcType="12"/>
-      <column name="password" sqlType="VARCHAR" precision="255" scale="0" nullable="false" jdbcType="12"/>
-      <column name="surname" sqlType="VARCHAR" precision="30" scale="0" nullable="true" jdbcType="12"/>
+      <column name="refreshToken" sqlType="VARCHAR" precision="255" scale="0" nullable="true" jdbcType="12"/>
+      <column name="token" sqlType="VARCHAR" precision="255" scale="0" nullable="true" jdbcType="12"/>
       <primary-key name="PRIMARY" columns="id"/>
-      <index name="UK_ew1hvam8uwaknuaellwhqchhb" unique="true" columns="login"/>
+      <index name="UK_6sou31qus5dnws6dwfu61e71v" unique="true" columns="mail"/>
     </table>
     <table name="games" schema="" catalog="stats" type="TABLE">
       <column name="id" sqlType="BIGINT" precision="19" scale="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
@@ -2093,5 +2091,8 @@
       <exported-key name="FK_5ogkmh24atsn75l7u4r5tvqqc" table="team_stats" schema="" catalog="stats" columns="team_id"/>
       <index name="FK_t3ngimsloy59c9mbel3xgs9tm" unique="false" columns="league_id"/>
     </table>
+  </data-source>
+  <data-source source="LOCAL" name="roomies" uuid="0ce23bcc-d467-47a2-a163-d0e39b156646">
+    <database-info product="" version="" jdbc-version="" driver-name="" driver-version=""/>
   </data-source>
 </component>
