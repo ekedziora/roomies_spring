@@ -20,9 +20,6 @@ public class TestController {
 
     private static final Logger log = Logger.getLogger(TestController.class);
 
-    @Autowired
-    private UserRepository userRepository;
-
     @RequestMapping(value = "test", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
     @ResponseStatus(HttpStatus.OK)
     public String test() {
@@ -36,7 +33,7 @@ public class TestController {
     }
 
     @RequestMapping(value = "request", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.CONTINUE)
+    @ResponseStatus(HttpStatus.OK)
     public RequestParams auth(RequestParams params) {
         return new RequestParams("return");
     }

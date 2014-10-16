@@ -44,7 +44,11 @@
 	</bean>
 
     <mvc:interceptors>
-        <bean class="pl.kedziora.emilek.roomies.interceptor.RequestInterceptor" />
+        <mvc:interceptor>
+            <mvc:mapping path="/**" />
+            <mvc:exclude-mapping path="/authcode/**" />
+            <bean class="pl.kedziora.emilek.roomies.interceptor.RequestInterceptor" />
+        </mvc:interceptor>
     </mvc:interceptors>
 
 </beans>

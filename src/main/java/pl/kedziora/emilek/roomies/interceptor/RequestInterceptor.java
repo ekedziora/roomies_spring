@@ -1,11 +1,14 @@
 package pl.kedziora.emilek.roomies.interceptor;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.log4j.Logger;
@@ -14,29 +17,24 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import pl.kedziora.emilek.json.objects.RequestParams;
-import pl.kedziora.emilek.json.utils.CoreUtils;
 import pl.kedziora.emilek.roomies.database.objects.User;
 import pl.kedziora.emilek.roomies.database.objects.UserBuilder;
-import pl.kedziora.emilek.roomies.repository.UserRepository;
+import pl.kedziora.emilek.json.utils.CoreUtils;
+import pl.kedziora.emilek.roomies.service.UserService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
 
 @Component
 public class RequestInterceptor extends HandlerInterceptorAdapter {
 
     private static final Logger log = Logger.getLogger(RequestInterceptor.class);
 
-    private UserRepository userRepository;
-
     @Autowired
-    public RequestInterceptor(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    private UserService userService;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -46,42 +44,43 @@ public class RequestInterceptor extends HandlerInterceptorAdapter {
         }
         catch (JsonParseException e) {
             log.error("Exception parsing JSON", e);
-            response.setStatus(400);//400-bad request
+            response.setStatus(HttpStatus.SC_BAD_REQUEST);
             return false;
         }
 
         if(params == null) {
             log.error("Params not existing");
-            response.setStatus(401);
+            response.setStatus(org.apache.http.HttpStatus.SC_BAD_REQUEST);
             return false;
         }
-
-        isTokenValid(params.getAndroidClientId());
 
         if(!CoreUtils.ANDROID_APP_CLIENT_ID.equals(params.getAndroidClientId())) {
             log.error("Android client id is not matching id from request");
-            response.setStatus(401); //403-forbidden, 401-unauthorized
+            response.setStatus(HttpStatus.SC_FORBIDDEN);
             return false;
         }
 
-        User user = userRepository.findUserByMail(params.getMail());
+        User user = userService.getByMail(params.getMail());
         if(user == null) {
             log.info("User is null");
             User newUser = UserBuilder.anUser().withMail(params.getMail()).build();
-            userRepository.save(newUser);
-            //get auth code
-            //then get token
+            userService.saveUser(newUser);
+            response.setStatus(HttpStatus.SC_UNAUTHORIZED);
+            return false;
         }
         else if(!user.hasTokens()) {
             log.info("User don't have tokens");
-            //get auth code
-            //then get token
+            response.setStatus(HttpStatus.SC_UNAUTHORIZED);
+            return false;
         }
 
-        //sprawdzenie czy dobry token
-        //ewentualnie refresh
-        //ewentualnie auth code nowy
-        //ewentualnie zwroc blad
+        boolean isTokenValid = isTokenValid(user.getToken());
+        if(!isTokenValid) {
+            if(!refreshToken(user.getRefreshToken(), params.getMail())) {
+                response.setStatus(HttpStatus.SC_UNAUTHORIZED);
+                return false;
+            }
+        }
 
         return true;
     }
@@ -107,7 +106,7 @@ public class RequestInterceptor extends HandlerInterceptorAdapter {
         return true;
     }
 
-    private boolean refreshToken(String refreshToken) {
+    private boolean refreshToken(String refreshToken, String mail) {
         String url = "https://accounts.google.com/o/oauth2/token";
         HttpClient client = HttpClientBuilder.create().build();
         HttpPost request = new HttpPost(url);
@@ -120,7 +119,7 @@ public class RequestInterceptor extends HandlerInterceptorAdapter {
 
         StringEntity entity;
         try {
-            entity = new StringEntity(postJson.getAsString());
+            entity = new StringEntity(postJson.toString());
         } catch (UnsupportedEncodingException e) {
             log.error("Exception parsing JSON", e);
             return false;
@@ -128,20 +127,21 @@ public class RequestInterceptor extends HandlerInterceptorAdapter {
         entity.setContentType(MediaType.APPLICATION_JSON_VALUE);
         request.setEntity(entity);
 
-        JsonObject inputJson;
+        JsonObject jsonResponse;
         try {
             HttpResponse response = client.execute(request);
             InputStreamReader reader = new InputStreamReader(response.getEntity().getContent());
-            inputJson = new JsonParser().parse(reader).getAsJsonObject();
+            jsonResponse = new JsonParser().parse(reader).getAsJsonObject();
         } catch (IOException e) {
             log.error("Exception refreshing token", e);
             return false;
         }
 
-        if(inputJson.has("access_token")) {
-            //save new token
+        if(jsonResponse.has("access_token")) {
+            userService.saveUserAccessToken(mail, jsonResponse.get("access_token").getAsString());
             return true;
         }
+
         return false;
     }
 
