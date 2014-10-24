@@ -51,4 +51,6 @@
         </mvc:interceptor>
     </mvc:interceptors>
 
+    <mvc:annotation-driven />
+
 </beans>
