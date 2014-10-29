@@ -43,14 +43,12 @@
 		<property name="password" value="Chromna18a" />
 	</bean>
 
-    <mvc:interceptors>
-        <mvc:interceptor>
-            <mvc:mapping path="/**" />
-            <mvc:exclude-mapping path="/authcode/**" />
-            <bean class="pl.kedziora.emilek.roomies.interceptor.RequestInterceptor" />
-        </mvc:interceptor>
-    </mvc:interceptors>
+    <bean id="gsonConverter" class="org.springframework.http.converter.json.GsonHttpMessageConverter" />
 
-    <mvc:annotation-driven />
+    <mvc:annotation-driven>
+        <mvc:message-converters>
+            <ref bean="gsonConverter" />
+        </mvc:message-converters>
+    </mvc:annotation-driven>
 
 </beans>

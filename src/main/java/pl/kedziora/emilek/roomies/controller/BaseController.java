@@ -1,68 +1,52 @@
-package pl.kedziora.emilek.roomies.interceptor;
+package pl.kedziora.emilek.roomies.controller;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import pl.kedziora.emilek.json.objects.GoogleErrorResponse;
-import pl.kedziora.emilek.json.objects.RefreshTokenParams;
 import pl.kedziora.emilek.json.objects.RequestParams;
 import pl.kedziora.emilek.json.objects.TokenResponse;
+import pl.kedziora.emilek.json.utils.CoreUtils;
 import pl.kedziora.emilek.roomies.database.objects.User;
 import pl.kedziora.emilek.roomies.database.objects.UserBuilder;
-import pl.kedziora.emilek.json.utils.CoreUtils;
+import pl.kedziora.emilek.roomies.exception.BadRequestException;
+import pl.kedziora.emilek.roomies.exception.ForbiddenException;
+import pl.kedziora.emilek.roomies.exception.UnauthorizedException;
 import pl.kedziora.emilek.roomies.service.UserService;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class RequestInterceptor extends HandlerInterceptorAdapter {
+public abstract class BaseController {
 
-    private static final Logger log = Logger.getLogger(RequestInterceptor.class);
+    private static final Logger log = Logger.getLogger(BaseController.class);
 
     @Autowired
-    private UserService userService;
+    protected UserService userService;
 
-    @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        RequestParams params;
-        try {
-            params = new Gson().fromJson(request.getReader(), RequestParams.class);
-        }
-        catch (JsonParseException e) {
-            log.error("Exception parsing JSON", e);
-            response.setStatus(HttpStatus.SC_BAD_REQUEST);
-            return false;
-        }
-
+    protected void preHandle(RequestParams params) {
         if(params == null) {
             log.error("Params not existing");
-            response.setStatus(org.apache.http.HttpStatus.SC_BAD_REQUEST);
-            return false;
+            throw new BadRequestException();
         }
 
         if(!CoreUtils.ANDROID_APP_CLIENT_ID.equals(params.getAndroidClientId())) {
             log.error("Android client id is not matching id from request");
-            response.setStatus(HttpStatus.SC_FORBIDDEN);
-            return false;
+            throw new ForbiddenException();
         }
 
         User user = userService.getByMail(params.getMail());
@@ -70,24 +54,19 @@ public class RequestInterceptor extends HandlerInterceptorAdapter {
             log.info("User is null");
             User newUser = UserBuilder.anUser().withMail(params.getMail()).build();
             userService.saveUser(newUser);
-            response.setStatus(HttpStatus.SC_UNAUTHORIZED);
-            return false;
+            throw new UnauthorizedException();
         }
         else if(!user.hasTokens()) {
             log.info("User don't have tokens");
-            response.setStatus(HttpStatus.SC_UNAUTHORIZED);
-            return false;
+            throw new UnauthorizedException();
         }
 
         boolean isTokenValid = isTokenValid(user.getToken());
         if(!isTokenValid) {
             if(!refreshAndSaveToken(user.getRefreshToken(), user.getMail())) {
-                response.setStatus(HttpStatus.SC_UNAUTHORIZED);
-                return false;
+                throw new UnauthorizedException();
             }
         }
-
-        return true;
     }
 
     private boolean isTokenValid(String token) {

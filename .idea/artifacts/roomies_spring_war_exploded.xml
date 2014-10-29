@@ -57,6 +57,15 @@
           <element id="library" level="project" name="Maven: org.codehaus.jackson:jackson-core-asl:1.9.11" />
           <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.4.1" />
           <element id="library" level="project" name="Maven: org.springframework:spring-aop:4.0.6.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework.android:spring-android-core:1.0.1.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework.android:spring-android-rest-template:1.0.1.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-aop:4.1.0.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-beans:4.1.0.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-context:4.1.0.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-core:4.1.0.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-expression:4.1.0.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-web:4.1.0.RELEASE" />
+          <element id="library" level="project" name="Maven: org.springframework:spring-webmvc:4.1.0.RELEASE" />
         </element>
       </element>
       <element id="javaee-facet-resources" facet="roomies_spring/web/Web" />

@@ -1,6 +1,7 @@
 package pl.kedziora.emilek.roomies.service;
 
 import com.sun.istack.internal.Nullable;
+import org.apache.commons.lang3.Validate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.kedziora.emilek.roomies.database.objects.User;
@@ -15,6 +16,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public void saveUserTokens(String mail, String accessToken, @Nullable String refreshToken) {
         User user = userRepository.findUserByMail(mail);
+        Validate.notNull(user);
+
         user.setToken(accessToken);
         if(refreshToken != null) {
             user.setRefreshToken(refreshToken);
@@ -25,6 +28,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public void saveUserAccessToken(String mail, String accessToken) {
         User user = userRepository.findUserByMail(mail);
+        Validate.notNull(user);
+
         user.setToken(accessToken);
         userRepository.save(user);
     }
@@ -41,7 +46,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public String getToken(String mail) {
-        return userRepository.findUserByMail(mail).getToken();
+        User user = userRepository.findUserByMail(mail);
+        Validate.notNull(user);
+
+        return user.getToken();
     }
 
 }
