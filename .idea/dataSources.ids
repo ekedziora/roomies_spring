@@ -1972,14 +1972,29 @@
       <column name="CURRENT_CONNECTIONS" sqlType="BIGINT" precision="19" scale="0" nullable="false" jdbcType="-5"/>
       <column name="TOTAL_CONNECTIONS" sqlType="BIGINT" precision="19" scale="0" nullable="false" jdbcType="-5"/>
     </table>
-    <table name="user" schema="" catalog="roomies" type="TABLE">
+    <table name="groups" schema="" catalog="roomies" type="TABLE">
+      <column name="id" sqlType="BIGINT" precision="19" scale="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
+      <column name="uuid" sqlType="VARCHAR" precision="255" scale="0" nullable="true" jdbcType="12"/>
+      <column name="address" sqlType="VARCHAR" precision="255" scale="0" nullable="true" jdbcType="12"/>
+      <column name="name" sqlType="VARCHAR" precision="255" scale="0" nullable="false" jdbcType="12"/>
+      <column name="admin_id" sqlType="BIGINT" precision="19" scale="0" nullable="false" jdbcType="-5"/>
+      <primary-key name="PRIMARY" columns="id"/>
+      <foreign-key name="FK_h0veiwfmy104lrq30j206t0dd" columns="admin_id" ref-table="users" ref-schema="" ref-catalog="roomies" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <exported-key name="FK_fm4cfgdt24toh89yw4rbnu1lb" table="users" schema="" catalog="roomies" columns="group_id"/>
+      <index name="FK_h0veiwfmy104lrq30j206t0dd" unique="false" columns="admin_id"/>
+    </table>
+    <table name="users" schema="" catalog="roomies" type="TABLE">
       <column name="id" sqlType="BIGINT" precision="19" scale="0" nullable="false" jdbcType="-5" autoIncrement="true"/>
       <column name="uuid" sqlType="VARCHAR" precision="255" scale="0" nullable="true" jdbcType="12"/>
       <column name="mail" sqlType="VARCHAR" precision="255" scale="0" nullable="false" jdbcType="12"/>
       <column name="refreshToken" sqlType="VARCHAR" precision="255" scale="0" nullable="true" jdbcType="12"/>
       <column name="token" sqlType="VARCHAR" precision="255" scale="0" nullable="true" jdbcType="12"/>
+      <column name="group_id" sqlType="BIGINT" precision="19" scale="0" nullable="true" jdbcType="-5"/>
       <primary-key name="PRIMARY" columns="id"/>
-      <index name="UK_6sou31qus5dnws6dwfu61e71v" unique="true" columns="mail"/>
+      <foreign-key name="FK_fm4cfgdt24toh89yw4rbnu1lb" columns="group_id" ref-table="groups" ref-schema="" ref-catalog="roomies" ref-columns="id" update-rule="3" delete-rule="3" deferrability="2"/>
+      <exported-key name="FK_h0veiwfmy104lrq30j206t0dd" table="groups" schema="" catalog="roomies" columns="admin_id"/>
+      <index name="UK_jhck7kjdogc7yia7qamc89ypv" unique="true" columns="mail"/>
+      <index name="FK_fm4cfgdt24toh89yw4rbnu1lb" unique="false" columns="group_id"/>
     </table>
     <table name="games" schema="" catalog="stats" type="TABLE">
       <column name="id" sqlType="BIGINT" precision="19" scale="0" nullable="false" jdbcType="-5" autoIncrement="true"/>

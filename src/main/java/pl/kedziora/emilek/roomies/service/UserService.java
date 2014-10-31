@@ -1,6 +1,6 @@
 package pl.kedziora.emilek.roomies.service;
 
-import org.springframework.stereotype.Service;
+import pl.kedziora.emilek.json.objects.UserAccountData;
 import pl.kedziora.emilek.roomies.database.objects.User;
 
 public interface UserService {
@@ -14,4 +14,6 @@ public interface UserService {
     void saveUser(User user);
 
     String getToken(String mail);
+
+    void saveVerifiedUserData(User user, UserAccountData accountData);
 }

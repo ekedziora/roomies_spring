@@ -17,11 +17,13 @@ import org.springframework.stereotype.Component;
 import pl.kedziora.emilek.json.objects.GoogleErrorResponse;
 import pl.kedziora.emilek.json.objects.RequestParams;
 import pl.kedziora.emilek.json.objects.TokenResponse;
+import pl.kedziora.emilek.json.objects.UserAccountData;
 import pl.kedziora.emilek.json.utils.CoreUtils;
+import pl.kedziora.emilek.roomies.builder.UserBuilder;
 import pl.kedziora.emilek.roomies.database.objects.User;
-import pl.kedziora.emilek.roomies.database.objects.UserBuilder;
 import pl.kedziora.emilek.roomies.exception.BadRequestException;
 import pl.kedziora.emilek.roomies.exception.ForbiddenException;
+import pl.kedziora.emilek.roomies.exception.InternalServerErrorException;
 import pl.kedziora.emilek.roomies.exception.UnauthorizedException;
 import pl.kedziora.emilek.roomies.service.UserService;
 
@@ -66,6 +68,10 @@ public abstract class BaseController {
             if(!refreshAndSaveToken(user.getRefreshToken(), user.getMail())) {
                 throw new UnauthorizedException();
             }
+        }
+
+        if(!user.isVerified()) {
+
         }
     }
 
@@ -121,6 +127,23 @@ public abstract class BaseController {
         }
 
         return false;
+    }
+
+    private void verifyAndSaveUserData(User user) {
+        HttpClient client = HttpClientBuilder.create().build();
+
+        String token = user.getToken();
+        HttpGet request = new HttpGet("https://www.googleapis.com/oauth2/v2/userinfo?alt=json&access_token=" + token);
+
+        try {
+            HttpResponse response = client.execute(request);
+            InputStreamReader reader = new InputStreamReader(response.getEntity().getContent(), "UTF-8");
+            UserAccountData userAccountData = new Gson().fromJson(reader, UserAccountData.class);
+            userService.saveVerifiedUserData(user, userAccountData);
+        } catch (IOException e) {
+            log.error("Exception during executing request", e);
+            throw new InternalServerErrorException();
+        }
     }
 
 }

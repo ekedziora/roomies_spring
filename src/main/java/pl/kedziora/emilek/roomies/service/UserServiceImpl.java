@@ -4,6 +4,8 @@ import com.sun.istack.internal.Nullable;
 import org.apache.commons.lang3.Validate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pl.kedziora.emilek.json.objects.UserAccountData;
+import pl.kedziora.emilek.roomies.Gender;
 import pl.kedziora.emilek.roomies.database.objects.User;
 import pl.kedziora.emilek.roomies.repository.UserRepository;
 
@@ -50,6 +52,18 @@ public class UserServiceImpl implements UserService {
         Validate.notNull(user);
 
         return user.getToken();
+    }
+
+    @Override
+    public void saveVerifiedUserData(User user, UserAccountData accountData) {
+        user.setFirstName(accountData.getFirstName());
+        user.setGender(Gender.fromString(accountData.getGender()));
+        user.setLastName(accountData.getLastName());
+        user.setName(accountData.getName());
+        user.setPictureLink(accountData.getPictureLink());
+        user.setVerified(true);
+
+        userRepository.save(user);
     }
 
 }

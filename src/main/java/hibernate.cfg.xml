@@ -11,5 +11,6 @@
   <property name="hbm2ddl.auto">create</property>
   <property name="show_sql">true</property>
   <mapping class="pl.kedziora.emilek.roomies.database.objects.User"/>
+  <mapping class="pl.kedziora.emilek.roomies.database.objects.Group"/>
  </session-factory>
 </hibernate-configuration>
