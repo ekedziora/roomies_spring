@@ -15,9 +15,9 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import pl.kedziora.emilek.json.objects.GoogleErrorResponse;
-import pl.kedziora.emilek.json.objects.RequestParams;
 import pl.kedziora.emilek.json.objects.TokenResponse;
 import pl.kedziora.emilek.json.objects.UserAccountData;
+import pl.kedziora.emilek.json.objects.params.RequestParams;
 import pl.kedziora.emilek.json.utils.CoreUtils;
 import pl.kedziora.emilek.roomies.builder.UserBuilder;
 import pl.kedziora.emilek.roomies.database.objects.User;
@@ -51,7 +51,7 @@ public abstract class BaseController {
             throw new ForbiddenException();
         }
 
-        User user = userService.getByMail(params.getMail());
+        User user = userService.getUserByMail(params.getMail());
         if(user == null) {
             log.info("User is null");
             User newUser = UserBuilder.anUser().withMail(params.getMail()).build();
@@ -71,7 +71,7 @@ public abstract class BaseController {
         }
 
         if(!user.isVerified()) {
-
+            verifyAndSaveUserData(user);
         }
     }
 

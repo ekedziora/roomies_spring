@@ -22,7 +22,7 @@ public class Group extends BaseEntity implements Serializable {
     @JoinColumn(name = "admin_id", nullable = false)
     private User admin;
 
-    @OneToMany(mappedBy = "group")
+    @OneToMany(mappedBy = "group", fetch = FetchType.EAGER)
     private List<User> members = Lists.newArrayList();
 
     public Group() {}
