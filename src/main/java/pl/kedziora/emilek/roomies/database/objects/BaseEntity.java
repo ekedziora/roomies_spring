@@ -1,9 +1,9 @@
 package pl.kedziora.emilek.roomies.database.objects;
 
-import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
+import javax.persistence.Version;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -18,12 +18,19 @@ public class BaseEntity implements Serializable {
 
     protected String uuid = UUID.randomUUID().toString();
 
+    @Version
+    protected Long version;
+
 	public Long getId() {
 		return id;
 	}
 
     public String getUuid() {
         return uuid;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 
     @Override

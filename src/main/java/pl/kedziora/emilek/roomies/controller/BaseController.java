@@ -12,8 +12,13 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.log4j.Logger;
+import org.hibernate.StaleObjectStateException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import pl.kedziora.emilek.json.objects.GoogleErrorResponse;
 import pl.kedziora.emilek.json.objects.TokenResponse;
 import pl.kedziora.emilek.json.objects.UserAccountData;
@@ -33,6 +38,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
+@ControllerAdvice
 public abstract class BaseController {
 
     private static final Logger log = Logger.getLogger(BaseController.class);
@@ -145,5 +151,9 @@ public abstract class BaseController {
             throw new InternalServerErrorException();
         }
     }
+
+    @ResponseStatus(HttpStatus.LOCKED)
+    @ExceptionHandler(StaleObjectStateException.class)
+    public void handleLock() {}
 
 }
