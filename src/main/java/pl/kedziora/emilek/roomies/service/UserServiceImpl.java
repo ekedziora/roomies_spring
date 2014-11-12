@@ -75,16 +75,19 @@ public class UserServiceImpl implements UserService {
             return null;
         }
 
+        User admin = group.getAdmin();
+        boolean isCurrentUserAdmin = admin.getMail().equals(mail);
         List<GroupMember> groupMembers = generateMembersList(group.getMembers());
-        return new MyGroupData(group.getName(), group.getAddress(), group.getAdmin().getName(), groupMembers);
+        return new MyGroupData(group.getName(), group.getAddress(), admin.getName(), isCurrentUserAdmin, groupMembers);
     }
 
     private List<GroupMember> generateMembersList(List<User> members) {
-        return Lists.newArrayList(Collections2.transform(members, new Function<User, GroupMember>() {
-            @Override
-            public GroupMember apply(User user) {
-                return new GroupMember(user.getName(), user.getPictureLink());
-            }
-        }));
+        return Lists.newArrayList(
+                Collections2.transform(members, new Function<User, GroupMember>() {
+                    @Override
+                    public GroupMember apply(User user) {
+                        return new GroupMember(user.getName(), user.getPictureLink());
+                    }
+                }));
     }
 }

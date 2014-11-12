@@ -6,8 +6,10 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import pl.kedziora.emilek.json.objects.EditGroupData;
 import pl.kedziora.emilek.json.objects.JoinGroupData;
 import pl.kedziora.emilek.json.objects.MemberToAddData;
+import pl.kedziora.emilek.json.objects.params.EditGroupParams;
 import pl.kedziora.emilek.json.objects.params.SaveGroupParams;
 import pl.kedziora.emilek.roomies.database.objects.Group;
 import pl.kedziora.emilek.roomies.database.objects.User;
@@ -45,7 +47,7 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public void joinUserToGroup(Long groupId, String mail) {
+    public void userJoinGroup(Long groupId, String mail) {
         User user = userRepository.findUserByMail(mail);
         Group group = groupRepository.findOne(groupId);
 
@@ -54,19 +56,14 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public List<MemberToAddData> getUsersAvailableToAdd(Long groupId, String currentUserMail) {
+    public List<MemberToAddData> getUsersAvailableToAdd(String currentUserMail) {
         List<User> users;
-        if(groupId == null) {
-            users = userRepository.findByMailNot(currentUserMail);
-        }
-        else {
-            users = userRepository.findByGroupIsNullAndMailNot(currentUserMail);
-        }
+        users = userRepository.findByGroupIsNullAndMailNot(currentUserMail);
 
-        return generateMembersToAdd(users);
+        return generateMembersFromUsers(users);
     }
 
-    private List<MemberToAddData> generateMembersToAdd(List<User> users) {
+    private List<MemberToAddData> generateMembersFromUsers(List<User> users) {
         return Lists.newArrayList(
                 Collections2.transform(users, new Function<User, MemberToAddData>() {
                     @Override
@@ -79,7 +76,7 @@ public class GroupServiceImpl implements GroupService {
 
 
     @Override
-    public void saveGroupFromRequest(SaveGroupParams params) {
+    public void createGroup(SaveGroupParams params) {
         if(StringUtils.isBlank(params.getName())) {
             throw new BadRequestException();
         }
@@ -115,4 +112,94 @@ public class GroupServiceImpl implements GroupService {
         );
     }
 
+    @Override
+    public void userLeaveGroup(String mail) {
+        User user = userRepository.findUserByMail(mail);
+        Group group = user.getGroup();
+
+        if(group == null) {
+            throw new BadRequestException();
+        }
+
+        user.setGroup(null);
+        userRepository.save(user);
+        group.getMembers().remove(user);
+        groupRepository.save(group);
+    }
+
+    @Override
+    public void deleteGroup(String mail) {
+        User user = userRepository.findUserByMail(mail);
+        Group group = user.getGroup();
+
+        if(group == null) {
+            throw new BadRequestException();
+        }
+
+        for(User member : group.getMembers()) {
+            member.setGroup(null);
+            userRepository.save(member);
+        }
+
+        groupRepository.delete(group);
+    }
+
+    @Override
+    public EditGroupData getGroupEditData(String mail) {
+        User user = userRepository.findUserByMail(mail);
+        Group group = user.getGroup();
+
+        if(group == null) {
+            throw new BadRequestException();
+        }
+
+        List<MemberToAddData> members = generateMembersFromUsers(group.getMembers());
+        List<MemberToAddData> availableMembers = generateMembersFromUsers(userRepository.findByGroupOrGroupIsNull(group));
+
+        return new EditGroupData(group.getName(), group.getAddress(), members, availableMembers);
+    }
+
+    @Override
+    public void editGroup(EditGroupParams params) {
+        User user = userRepository.findUserByMail(params.getRequestParams().getMail());
+        Group group = user.getGroup();
+
+        group.setName(params.getName());
+        group.setAddress(params.getAddress());
+        group.setAdmin(userRepository.findOne(params.getAdmin().getId()));
+
+        List<User> currentMembersList = group.getMembers();
+        List<User> newMembersList = generateUsersFromMembers(params.getMembers());
+
+        List<User> deletedMembers = Lists.newArrayList(currentMembersList);
+        deletedMembers.removeAll(newMembersList);
+
+        List<User> addedMembers = Lists.newArrayList(newMembersList);
+        addedMembers.removeAll(currentMembersList);
+
+        for(User userMember : deletedMembers) {
+            userMember.setGroup(null);
+            userRepository.save(userMember);
+            currentMembersList.remove(userMember);
+        }
+
+        for(User userMember : addedMembers) {
+            userMember.setGroup(group);
+            userRepository.save(userMember);
+            currentMembersList.add(userMember);
+        }
+
+        groupRepository.save(group);
+    }
+
+    private List<User> generateUsersFromMembers(final List<MemberToAddData> members) {
+        return Lists.newArrayList(
+                Collections2.transform(members, new Function<MemberToAddData, User>() {
+                    @Override
+                    public User apply(MemberToAddData memberToAddData) {
+                        return userRepository.findOne(memberToAddData.getId());
+                    }
+                })
+        );
+    }
 }
