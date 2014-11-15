@@ -7,9 +7,10 @@ import com.sun.istack.internal.Nullable;
 import org.apache.commons.lang3.Validate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pl.kedziora.emilek.json.objects.GroupMember;
-import pl.kedziora.emilek.json.objects.MyGroupData;
+import org.springframework.transaction.annotation.Transactional;
 import pl.kedziora.emilek.json.objects.UserAccountData;
+import pl.kedziora.emilek.json.objects.data.GroupData;
+import pl.kedziora.emilek.json.objects.data.GroupMemberData;
 import pl.kedziora.emilek.roomies.Gender;
 import pl.kedziora.emilek.roomies.database.objects.Group;
 import pl.kedziora.emilek.roomies.database.objects.User;
@@ -18,6 +19,7 @@ import pl.kedziora.emilek.roomies.repository.UserRepository;
 import java.util.List;
 
 @Service
+@Transactional
 public class UserServiceImpl implements UserService {
 
     @Autowired
@@ -67,7 +69,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public MyGroupData getUserGroupDataByMail(String mail) {
+    public GroupData getUserGroupDataByMail(String mail) {
         User user = userRepository.findUserByMail(mail);
         Group group = user.getGroup();
 
@@ -77,16 +79,16 @@ public class UserServiceImpl implements UserService {
 
         User admin = group.getAdmin();
         boolean isCurrentUserAdmin = admin.getMail().equals(mail);
-        List<GroupMember> groupMembers = generateMembersList(group.getMembers());
-        return new MyGroupData(group.getName(), group.getAddress(), admin.getName(), isCurrentUserAdmin, groupMembers);
+        List<GroupMemberData> groupMembers = generateMembersList(group.getMembers());
+        return new GroupData(group.getName(), group.getAddress(), admin.getName(), isCurrentUserAdmin, groupMembers);
     }
 
-    private List<GroupMember> generateMembersList(List<User> members) {
+    private List<GroupMemberData> generateMembersList(List<User> members) {
         return Lists.newArrayList(
-                Collections2.transform(members, new Function<User, GroupMember>() {
+                Collections2.transform(members, new Function<User, GroupMemberData>() {
                     @Override
-                    public GroupMember apply(User user) {
-                        return new GroupMember(user.getName(), user.getPictureLink());
+                    public GroupMemberData apply(User user) {
+                        return new GroupMemberData(user.getName(), user.getPictureLink());
                     }
                 }));
     }

@@ -1,11 +1,14 @@
 package pl.kedziora.emilek.roomies.database.objects;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.hibernate.annotations.SortNatural;
 
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.List;
+import java.util.SortedSet;
 
 @Entity
 @Table(name = "groups")
@@ -24,6 +27,11 @@ public class Group extends BaseEntity implements Serializable {
 
     @OneToMany(mappedBy = "group", fetch = FetchType.EAGER)
     private List<User> members = Lists.newArrayList();
+
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OrderBy("fromDate desc")
+    @SortNatural
+    private SortedSet<PaymentGroup> paymentGroups = Sets.newTreeSet();
 
     public Group() {}
 
@@ -57,6 +65,14 @@ public class Group extends BaseEntity implements Serializable {
 
     public void setMembers(List<User> members) {
         this.members = members;
+    }
+
+    public SortedSet<PaymentGroup> getPaymentGroups() {
+        return paymentGroups;
+    }
+
+    public void setPaymentGroups(SortedSet<PaymentGroup> paymentGroups) {
+        this.paymentGroups = paymentGroups;
     }
 
     @Override

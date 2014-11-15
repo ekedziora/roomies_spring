@@ -4,10 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import pl.kedziora.emilek.json.objects.EditGroupData;
-import pl.kedziora.emilek.json.objects.JoinGroupData;
-import pl.kedziora.emilek.json.objects.MemberToAddData;
-import pl.kedziora.emilek.json.objects.MyGroupData;
+import pl.kedziora.emilek.json.objects.data.EditGroupData;
+import pl.kedziora.emilek.json.objects.data.GroupData;
+import pl.kedziora.emilek.json.objects.data.JoinGroupData;
+import pl.kedziora.emilek.json.objects.data.MemberToAddData;
 import pl.kedziora.emilek.json.objects.params.EditGroupParams;
 import pl.kedziora.emilek.json.objects.params.JoinGroupParams;
 import pl.kedziora.emilek.json.objects.params.RequestParams;
@@ -29,7 +29,7 @@ public class GroupController extends BaseController {
 
     @RequestMapping(value = "user", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.OK)
-    public MyGroupData getGroupByUser(@RequestBody RequestParams params) {
+    public GroupData getGroupByUser(@RequestBody RequestParams params) {
         preHandle(params);
 
         return userService.getUserGroupDataByMail(params.getMail());
@@ -41,7 +41,7 @@ public class GroupController extends BaseController {
     public List<JoinGroupData> getGroupsToJoin(@RequestBody RequestParams params) {
         preHandle(params);
 
-        return groupService.getAllJoinGroupData();
+        return groupService.getJoinGroupData();
     }
 
     @RequestMapping(value = "userJoin", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -57,7 +57,7 @@ public class GroupController extends BaseController {
     public List<MemberToAddData> getAvailableUsersToAdd(@RequestBody RequestParams params) {
         preHandle(params);
 
-        return groupService.getUsersAvailableToAdd(params.getMail());
+        return groupService.getCreateGroupData(params.getMail());
     }
 
     @RequestMapping(value = "save", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)

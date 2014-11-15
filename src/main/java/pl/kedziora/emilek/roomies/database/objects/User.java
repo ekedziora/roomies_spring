@@ -37,7 +37,7 @@ public class User extends BaseEntity implements Serializable {
     private String refreshToken;
 
     @Type(type = "true_false")
-    private boolean verified;
+    private boolean verified = false;
 
     @ManyToOne
     @JoinColumn(name = "group_id")

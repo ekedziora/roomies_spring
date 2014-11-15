@@ -6,12 +6,14 @@ import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import pl.kedziora.emilek.json.objects.EditGroupData;
-import pl.kedziora.emilek.json.objects.JoinGroupData;
-import pl.kedziora.emilek.json.objects.MemberToAddData;
+import org.springframework.transaction.annotation.Transactional;
+import pl.kedziora.emilek.json.objects.data.EditGroupData;
+import pl.kedziora.emilek.json.objects.data.JoinGroupData;
+import pl.kedziora.emilek.json.objects.data.MemberToAddData;
 import pl.kedziora.emilek.json.objects.params.EditGroupParams;
 import pl.kedziora.emilek.json.objects.params.SaveGroupParams;
 import pl.kedziora.emilek.roomies.database.objects.Group;
+import pl.kedziora.emilek.roomies.database.objects.PaymentGroup;
 import pl.kedziora.emilek.roomies.database.objects.User;
 import pl.kedziora.emilek.roomies.exception.BadRequestException;
 import pl.kedziora.emilek.roomies.repository.GroupRepository;
@@ -20,6 +22,7 @@ import pl.kedziora.emilek.roomies.repository.UserRepository;
 import java.util.List;
 
 @Service
+@Transactional
 public class GroupServiceImpl implements GroupService {
 
     @Autowired
@@ -29,7 +32,7 @@ public class GroupServiceImpl implements GroupService {
     private UserRepository userRepository;
 
     @Override
-    public List<JoinGroupData> getAllJoinGroupData() {
+    public List<JoinGroupData> getJoinGroupData() {
         List<Group> allGroups = groupRepository.findAll();
 
         return generateGroupDataList(allGroups);
@@ -56,7 +59,7 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public List<MemberToAddData> getUsersAvailableToAdd(String currentUserMail) {
+    public List<MemberToAddData> getCreateGroupData(String currentUserMail) {
         List<User> users;
         users = userRepository.findByGroupIsNullAndMailNot(currentUserMail);
 
@@ -99,6 +102,12 @@ public class GroupServiceImpl implements GroupService {
             userRepository.save(user);
             newGroup.getMembers().add(user);
         }
+
+        PaymentGroup paymentGroup = new PaymentGroup();
+        paymentGroup.setGroup(newGroup);
+        newGroup.getPaymentGroups().add(paymentGroup);
+
+        groupRepository.save(newGroup);
     }
 
     private List<Long> generateMembersIds(List<MemberToAddData> members) {
@@ -123,8 +132,6 @@ public class GroupServiceImpl implements GroupService {
 
         user.setGroup(null);
         userRepository.save(user);
-        group.getMembers().remove(user);
-        groupRepository.save(group);
     }
 
     @Override
