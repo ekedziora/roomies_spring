@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.kedziora.emilek.json.objects.data.BudgetData;
 import pl.kedziora.emilek.json.objects.data.PaymentData;
+import pl.kedziora.emilek.json.objects.params.AddPaymentParams;
 import pl.kedziora.emilek.roomies.database.objects.*;
 import pl.kedziora.emilek.roomies.repository.PaymentGroupRepository;
 import pl.kedziora.emilek.roomies.repository.PaymentRepository;
@@ -91,6 +92,24 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public void deletePayment(Long paymentId) {
         paymentRepository.delete(paymentId);
+
+        //recalculate balances
+    }
+
+    @Override
+    public void addPayment(AddPaymentParams params) {
+        User user = userRepository.findUserByMail(params.getParams().getMail());
+        Group group = user.getGroup();
+        SortedSet<PaymentGroup> paymentGroups = group.getPaymentGroups();
+
+        createPaymentGroupIfNotExists(group, paymentGroups);
+
+        Payment payment = new Payment();
+        payment.setPaymentGroup(paymentGroups.first());
+        payment.setUserId(user.getId());
+        payment.setAmount(params.getAmount());
+        payment.setDescription(params.getDescription());
+        paymentRepository.save(payment);
 
         //recalculate balances
     }

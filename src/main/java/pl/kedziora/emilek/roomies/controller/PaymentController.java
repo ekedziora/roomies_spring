@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import pl.kedziora.emilek.json.objects.data.BudgetData;
+import pl.kedziora.emilek.json.objects.params.AddPaymentParams;
 import pl.kedziora.emilek.json.objects.params.DeletePaymentParams;
 import pl.kedziora.emilek.json.objects.params.RequestParams;
 import pl.kedziora.emilek.roomies.service.PaymentService;
@@ -30,6 +31,14 @@ public class PaymentController extends BaseController {
         preHandle(params.getRequestParams());
 
         paymentService.deletePayment(params.getPaymentId());
+    }
+
+    @RequestMapping(value = "add", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.OK)
+    public void addPayment(@RequestBody AddPaymentParams params) {
+        preHandle(params.getParams());
+
+        paymentService.addPayment(params);
     }
 
 }
