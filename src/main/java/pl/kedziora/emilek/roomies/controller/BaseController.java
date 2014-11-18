@@ -26,10 +26,7 @@ import pl.kedziora.emilek.json.objects.params.RequestParams;
 import pl.kedziora.emilek.json.utils.CoreUtils;
 import pl.kedziora.emilek.roomies.builder.UserBuilder;
 import pl.kedziora.emilek.roomies.database.objects.User;
-import pl.kedziora.emilek.roomies.exception.BadRequestException;
-import pl.kedziora.emilek.roomies.exception.ForbiddenException;
-import pl.kedziora.emilek.roomies.exception.InternalServerErrorException;
-import pl.kedziora.emilek.roomies.exception.UnauthorizedException;
+import pl.kedziora.emilek.roomies.exception.*;
 import pl.kedziora.emilek.roomies.service.UserService;
 
 import java.io.IOException;
@@ -50,6 +47,11 @@ public abstract class BaseController {
         if(params == null) {
             log.error("Params not existing");
             throw new BadRequestException();
+        }
+
+        if(params.getMail() == null) {
+            log.error("Mail is null");
+            throw new ConflictException();
         }
 
         if(!CoreUtils.ANDROID_APP_CLIENT_ID.equals(params.getAndroidClientId())) {
