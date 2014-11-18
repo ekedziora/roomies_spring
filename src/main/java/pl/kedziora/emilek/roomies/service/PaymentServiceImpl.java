@@ -34,6 +34,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     private UserBalanceRepository userBalanceRepository;
 
+    @Autowired
+    private PaymentGroupService paymentGroupService;
+
     @Override
     public BudgetData getBudgetData(String mail) {
         User user = userRepository.findUserByMail(mail);
@@ -44,22 +47,18 @@ public class PaymentServiceImpl implements PaymentService {
             return new BudgetData(null, null, null);
         }
 
-        SortedSet<PaymentGroup> paymentGroups = group.getPaymentGroups();
-        createPaymentGroupIfNotExists(group, paymentGroups);
+        PaymentGroup firstPaymentGroup = createPaymentGroupIfNotExistsOrReturnExistingOne(group);
 
-        PaymentGroup firstPaymentGroup = paymentGroups.first();
-
-        List<Payment> payments = paymentRepository.findByUserIdAndPaymentGroup(userId, firstPaymentGroup);
-        UserBalance balance = userBalanceRepository.findByUserIdAndPaymentGroup(userId, firstPaymentGroup);
-
-        balance = createUserBalanceIfNotExists(userId, firstPaymentGroup, balance);
+        List<Payment> payments = paymentRepository.findByPaymentGroup(firstPaymentGroup);
+        UserBalance balance = createUserBalanceIfNotExistsOrReturnExistingOne(userId, firstPaymentGroup);
 
         List<PaymentData> paymentDatas = generatePaymentDatasFromPayments(payments, user.getName());
 
         return new BudgetData(userId, balance.getBalance(), paymentDatas);
     }
 
-    private UserBalance createUserBalanceIfNotExists(Long userId, PaymentGroup firstPaymentGroup, UserBalance balance) {
+    private UserBalance createUserBalanceIfNotExistsOrReturnExistingOne(Long userId, PaymentGroup firstPaymentGroup) {
+        UserBalance balance = userBalanceRepository.findByUserIdAndPaymentGroup(userId, firstPaymentGroup);
         if(balance == null) {
             balance = new UserBalance();
             balance.setUserId(userId);
@@ -69,11 +68,16 @@ public class PaymentServiceImpl implements PaymentService {
         return balance;
     }
 
-    private void createPaymentGroupIfNotExists(Group group, SortedSet<PaymentGroup> paymentGroups) {
+    private PaymentGroup createPaymentGroupIfNotExistsOrReturnExistingOne(Group group) {
+        SortedSet<PaymentGroup> paymentGroups = group.getPaymentGroups();
         if(paymentGroups.isEmpty()) {
             PaymentGroup paymentGroup = new PaymentGroup();
             paymentGroup.setGroup(group);
             paymentGroupRepository.save(paymentGroup);
+            return paymentGroup;
+        }
+        else {
+            return paymentGroups.first();
         }
     }
 
@@ -91,27 +95,27 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public void deletePayment(Long paymentId) {
-        paymentRepository.delete(paymentId);
+        Payment payment = paymentRepository.findOne(paymentId);
+        PaymentGroup paymentGroup = payment.getPaymentGroup();
+        paymentRepository.delete(payment);
 
-        //recalculate balances
+        paymentGroupService.recalculateUserBalances(paymentGroup);
     }
 
     @Override
     public void addPayment(AddPaymentParams params) {
         User user = userRepository.findUserByMail(params.getParams().getMail());
         Group group = user.getGroup();
-        SortedSet<PaymentGroup> paymentGroups = group.getPaymentGroups();
-
-        createPaymentGroupIfNotExists(group, paymentGroups);
+        PaymentGroup paymentGroup = createPaymentGroupIfNotExistsOrReturnExistingOne(group);
 
         Payment payment = new Payment();
-        payment.setPaymentGroup(paymentGroups.first());
+        payment.setPaymentGroup(paymentGroup);
         payment.setUserId(user.getId());
         payment.setAmount(params.getAmount());
         payment.setDescription(params.getDescription());
         paymentRepository.save(payment);
 
-        //recalculate balances
+        paymentGroupService.recalculateUserBalances(paymentGroup);
     }
 
 }
