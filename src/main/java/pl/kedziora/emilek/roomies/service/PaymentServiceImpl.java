@@ -9,12 +9,17 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.kedziora.emilek.json.objects.data.BudgetData;
 import pl.kedziora.emilek.json.objects.data.PaymentData;
 import pl.kedziora.emilek.json.objects.params.AddPaymentParams;
-import pl.kedziora.emilek.roomies.database.objects.*;
+import pl.kedziora.emilek.roomies.annotation.Secured;
+import pl.kedziora.emilek.roomies.database.objects.Group;
+import pl.kedziora.emilek.roomies.database.objects.Payment;
+import pl.kedziora.emilek.roomies.database.objects.PaymentGroup;
+import pl.kedziora.emilek.roomies.database.objects.User;
+import pl.kedziora.emilek.roomies.exception.ForbiddenException;
 import pl.kedziora.emilek.roomies.repository.PaymentGroupRepository;
 import pl.kedziora.emilek.roomies.repository.PaymentRepository;
-import pl.kedziora.emilek.roomies.repository.UserBalanceRepository;
 import pl.kedziora.emilek.roomies.repository.UserRepository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.SortedSet;
 
@@ -32,15 +37,11 @@ public class PaymentServiceImpl implements PaymentService {
     private PaymentRepository paymentRepository;
 
     @Autowired
-    private UserBalanceRepository userBalanceRepository;
-
-    @Autowired
     private PaymentGroupService paymentGroupService;
 
     @Override
     public BudgetData getBudgetData(String mail) {
         User user = userRepository.findUserByMail(mail);
-        Long userId = user.getId();
         Group group = user.getGroup();
 
         if(group == null) {
@@ -50,22 +51,11 @@ public class PaymentServiceImpl implements PaymentService {
         PaymentGroup firstPaymentGroup = createPaymentGroupIfNotExistsOrReturnExistingOne(group);
 
         List<Payment> payments = paymentRepository.findByPaymentGroup(firstPaymentGroup);
-        UserBalance balance = createUserBalanceIfNotExistsOrReturnExistingOne(userId, firstPaymentGroup);
+        BigDecimal balance = paymentGroupService.calculateUserBalance(firstPaymentGroup, user);
 
-        List<PaymentData> paymentDatas = generatePaymentDatasFromPayments(payments, user.getName());
+        List<PaymentData> paymentDatas = generatePaymentDatasFromPayments(payments);
 
-        return new BudgetData(userId, balance.getBalance(), paymentDatas);
-    }
-
-    private UserBalance createUserBalanceIfNotExistsOrReturnExistingOne(Long userId, PaymentGroup firstPaymentGroup) {
-        UserBalance balance = userBalanceRepository.findByUserIdAndPaymentGroup(userId, firstPaymentGroup);
-        if(balance == null) {
-            balance = new UserBalance();
-            balance.setUserId(userId);
-            balance.setPaymentGroup(firstPaymentGroup);
-            userBalanceRepository.save(balance);
-        }
-        return balance;
+        return new BudgetData(user.getId(), balance, paymentDatas);
     }
 
     private PaymentGroup createPaymentGroupIfNotExistsOrReturnExistingOne(Group group) {
@@ -81,12 +71,13 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
-    private List<PaymentData> generatePaymentDatasFromPayments(List<Payment> payments, final String userName) {
+    private List<PaymentData> generatePaymentDatasFromPayments(List<Payment> payments) {
         return Lists.newArrayList(
                 Collections2.transform(payments, new Function<Payment, PaymentData>() {
                     @Override
                     public PaymentData apply(Payment payment) {
-                        return new PaymentData(payment.getId(), payment.getDescription(), userName, payment.getUserId(),
+                        User user = payment.getUser();
+                        return new PaymentData(payment.getId(), payment.getDescription(), user.getName(), user.getId(),
                                 payment.getAmount());
                     }
                 })
@@ -94,12 +85,15 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public void deletePayment(Long paymentId) {
+    @Secured("Secured from user deleting any payment in database")
+    public void deletePayment(Long paymentId, String mail) {
         Payment payment = paymentRepository.findOne(paymentId);
-        PaymentGroup paymentGroup = payment.getPaymentGroup();
-        paymentRepository.delete(payment);
+        User user = userRepository.findUserByMail(mail);
+        if(!payment.getUser().equals(user)) {
+            throw new ForbiddenException();
+        }
 
-        paymentGroupService.recalculateUserBalances(paymentGroup);
+        paymentRepository.delete(payment);
     }
 
     @Override
@@ -110,12 +104,10 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment payment = new Payment();
         payment.setPaymentGroup(paymentGroup);
-        payment.setUserId(user.getId());
+        payment.setUser(user);
         payment.setAmount(params.getAmount());
         payment.setDescription(params.getDescription());
         paymentRepository.save(payment);
-
-        paymentGroupService.recalculateUserBalances(paymentGroup);
     }
 
 }

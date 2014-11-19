@@ -7,9 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.kedziora.emilek.roomies.database.objects.Payment;
 import pl.kedziora.emilek.roomies.database.objects.PaymentGroup;
 import pl.kedziora.emilek.roomies.database.objects.User;
-import pl.kedziora.emilek.roomies.database.objects.UserBalance;
 import pl.kedziora.emilek.roomies.repository.PaymentRepository;
-import pl.kedziora.emilek.roomies.repository.UserBalanceRepository;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -20,23 +18,19 @@ import java.util.Map;
 public class PaymentGroupServiceImpl implements PaymentGroupService {
 
     @Autowired
-    private UserBalanceRepository userBalanceRepository;
-
-    @Autowired
     private PaymentRepository paymentRepository;
 
+    /**
+     * Na przyszłość do przeliczania salda wszystkich userów w grupie
+     *
+     * @param paymentGroup
+     */
     @Override
     public void recalculateUserBalances(PaymentGroup paymentGroup) {
         List<User> members = paymentGroup.getGroup().getMembers();
         Map<User, BigDecimal> userSums = createUserSums(paymentGroup, members);
 
         BigDecimal average = calculateAverage(members, userSums);
-
-        for(Map.Entry<User, BigDecimal> entry : userSums.entrySet()) {
-            UserBalance userBalance = userBalanceRepository.findByUserIdAndPaymentGroup(entry.getKey().getId(), paymentGroup);
-            userBalance.setBalance(entry.getValue().subtract(average));
-            userBalanceRepository.save(userBalance);
-        }
     }
 
     private BigDecimal calculateAverage(List<User> members, Map<User, BigDecimal> userSums) {
@@ -53,8 +47,7 @@ public class PaymentGroupServiceImpl implements PaymentGroupService {
         Map<User, BigDecimal> userSums = Maps.newHashMapWithExpectedSize(members.size());
 
         for(User user : members) {
-            createUserBalanceIfNotExists(user.getId(), paymentGroup);
-            List<Payment> payments = paymentRepository.findByUserIdAndPaymentGroup(user.getId(), paymentGroup);
+            List<Payment> payments = paymentRepository.findByUserAndPaymentGroup(user, paymentGroup);
 
             BigDecimal sum = BigDecimal.ZERO;
             for(Payment payment : payments) {
@@ -66,14 +59,32 @@ public class PaymentGroupServiceImpl implements PaymentGroupService {
         return userSums;
     }
 
-    private void createUserBalanceIfNotExists(Long userId, PaymentGroup paymentGroup) {
-        UserBalance balance = userBalanceRepository.findByUserIdAndPaymentGroup(userId, paymentGroup);
-        if(balance == null) {
-            balance = new UserBalance();
-            balance.setUserId(userId);
-            balance.setPaymentGroup(paymentGroup);
-            userBalanceRepository.save(balance);
+    @Override
+    public BigDecimal calculateUserBalance(PaymentGroup paymentGroup, User user) {
+        BigDecimal average = calculateAverage(paymentGroup);
+
+        List<Payment> userPayments = paymentRepository.findByUserAndPaymentGroup(user, paymentGroup);
+        BigDecimal userSum = sumPayments(userPayments);
+
+        return userSum.subtract(average);
+    }
+
+    private BigDecimal calculateAverage(PaymentGroup paymentGroup) {
+        List<Payment> groupPayments = paymentRepository.findByPaymentGroup(paymentGroup);
+        BigDecimal groupSum = sumPayments(groupPayments);
+
+        int membersCount = paymentGroup.getGroup().getMembers().size();
+        BigDecimal divider = new BigDecimal(String.valueOf(membersCount));
+
+        return groupSum.divide(divider, 2, BigDecimal.ROUND_HALF_UP);
+    }
+
+    private BigDecimal sumPayments(List<Payment> payments) {
+        BigDecimal sum = BigDecimal.ZERO;
+        for(Payment payment : payments) {
+            sum = sum.add(payment.getAmount());
         }
+        return sum;
     }
 
 }

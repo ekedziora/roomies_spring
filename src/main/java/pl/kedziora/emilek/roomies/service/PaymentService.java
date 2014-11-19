@@ -6,7 +6,7 @@ import pl.kedziora.emilek.json.objects.params.AddPaymentParams;
 public interface PaymentService {
     BudgetData getBudgetData(String mail);
 
-    void deletePayment(Long paymentId);
+    void deletePayment(Long paymentId, String mail);
 
     void addPayment(AddPaymentParams params);
 }

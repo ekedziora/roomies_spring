@@ -30,9 +30,6 @@ public class PaymentGroup extends BaseEntity implements Comparable<PaymentGroup>
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "paymentGroup")
     private List<Payment> payments = Lists.newArrayList();
 
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "paymentGroup")
-    private List<UserBalance> balances = Lists.newArrayList();
-
     public PaymentGroup() {
     }
 
@@ -74,14 +71,6 @@ public class PaymentGroup extends BaseEntity implements Comparable<PaymentGroup>
 
     public void setPayments(List<Payment> payments) {
         this.payments = payments;
-    }
-
-    public List<UserBalance> getBalances() {
-        return balances;
-    }
-
-    public void setBalances(List<UserBalance> balances) {
-        this.balances = balances;
     }
 
     @Override

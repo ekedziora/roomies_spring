@@ -1,6 +1,9 @@
 package pl.kedziora.emilek.roomies.database.objects;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
@@ -14,8 +17,9 @@ public class Payment extends BaseEntity implements Serializable {
 
     private String description;
 
-    @Column(name = "user_id")
-    private Long userId;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @ManyToOne
     @JoinColumn(name = "payment_group_id", nullable = false)
@@ -40,12 +44,12 @@ public class Payment extends BaseEntity implements Serializable {
         this.description = description;
     }
 
-    public Long getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public PaymentGroup getPaymentGroup() {

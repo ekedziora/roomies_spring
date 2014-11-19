@@ -30,7 +30,7 @@ public class PaymentController extends BaseController {
     public void deletePayment(@RequestBody DeletePaymentParams params) {
         preHandle(params.getRequestParams());
 
-        paymentService.deletePayment(params.getPaymentId());
+        paymentService.deletePayment(params.getPaymentId(), params.getRequestParams().getMail());
     }
 
     @RequestMapping(value = "add", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
