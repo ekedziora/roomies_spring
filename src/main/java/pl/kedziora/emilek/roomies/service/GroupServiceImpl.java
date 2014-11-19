@@ -12,6 +12,7 @@ import pl.kedziora.emilek.json.objects.data.JoinGroupData;
 import pl.kedziora.emilek.json.objects.data.MemberToAddData;
 import pl.kedziora.emilek.json.objects.params.EditGroupParams;
 import pl.kedziora.emilek.json.objects.params.SaveGroupParams;
+import pl.kedziora.emilek.roomies.annotation.Secured;
 import pl.kedziora.emilek.roomies.database.objects.Group;
 import pl.kedziora.emilek.roomies.database.objects.PaymentGroup;
 import pl.kedziora.emilek.roomies.database.objects.User;
@@ -122,9 +123,14 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
+    @Secured("Admin leaving group")
     public void userLeaveGroup(String mail) {
         User user = userRepository.findUserByMail(mail);
         Group group = user.getGroup();
+
+        if(isAdmin(user, group)) {
+            throw new BadRequestException();
+        }
 
         if(group == null) {
             throw new BadRequestException();
@@ -135,9 +141,14 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
+    @Secured("Regular user deleting group")
     public void deleteGroup(String mail) {
         User user = userRepository.findUserByMail(mail);
         Group group = user.getGroup();
+
+        if(!isAdmin(user, group)) {
+            throw new BadRequestException();
+        }
 
         if(group == null) {
             throw new BadRequestException();
@@ -167,9 +178,14 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
+    @Secured("Regular user editing group")
     public void editGroup(EditGroupParams params) {
         User user = userRepository.findUserByMail(params.getRequestParams().getMail());
         Group group = user.getGroup();
+
+        if(!isAdmin(user, group)) {
+            throw new BadRequestException();
+        }
 
         group.setName(params.getName());
         group.setAddress(params.getAddress());
@@ -209,4 +225,9 @@ public class GroupServiceImpl implements GroupService {
                 })
         );
     }
+
+    private boolean isAdmin(User user, Group group) {
+        return group.getAdmin().equals(user);
+    }
+
 }

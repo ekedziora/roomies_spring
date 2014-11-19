@@ -14,7 +14,7 @@ import pl.kedziora.emilek.roomies.database.objects.Group;
 import pl.kedziora.emilek.roomies.database.objects.Payment;
 import pl.kedziora.emilek.roomies.database.objects.PaymentGroup;
 import pl.kedziora.emilek.roomies.database.objects.User;
-import pl.kedziora.emilek.roomies.exception.ForbiddenException;
+import pl.kedziora.emilek.roomies.exception.BadRequestException;
 import pl.kedziora.emilek.roomies.repository.PaymentGroupRepository;
 import pl.kedziora.emilek.roomies.repository.PaymentRepository;
 import pl.kedziora.emilek.roomies.repository.UserRepository;
@@ -85,12 +85,12 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    @Secured("Secured from user deleting any payment in database")
+    @Secured("User deleting any payment in database")
     public void deletePayment(Long paymentId, String mail) {
         Payment payment = paymentRepository.findOne(paymentId);
         User user = userRepository.findUserByMail(mail);
         if(!payment.getUser().equals(user)) {
-            throw new ForbiddenException();
+            throw new BadRequestException();
         }
 
         paymentRepository.delete(payment);
