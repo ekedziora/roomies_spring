@@ -14,10 +14,12 @@ import pl.kedziora.emilek.json.objects.params.EditGroupParams;
 import pl.kedziora.emilek.json.objects.params.SaveGroupParams;
 import pl.kedziora.emilek.roomies.annotation.Secured;
 import pl.kedziora.emilek.roomies.database.objects.Group;
+import pl.kedziora.emilek.roomies.database.objects.Payment;
 import pl.kedziora.emilek.roomies.database.objects.PaymentGroup;
 import pl.kedziora.emilek.roomies.database.objects.User;
 import pl.kedziora.emilek.roomies.exception.BadRequestException;
 import pl.kedziora.emilek.roomies.repository.GroupRepository;
+import pl.kedziora.emilek.roomies.repository.PaymentRepository;
 import pl.kedziora.emilek.roomies.repository.UserRepository;
 
 import java.util.List;
@@ -31,6 +33,9 @@ public class GroupServiceImpl implements GroupService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PaymentRepository paymentRepository;
 
     @Override
     public List<JoinGroupData> getJoinGroupData() {
@@ -128,12 +133,17 @@ public class GroupServiceImpl implements GroupService {
         User user = userRepository.findUserByMail(mail);
         Group group = user.getGroup();
 
+        if(group == null) {
+            throw new BadRequestException();
+        }
+
         if(isAdmin(user, group)) {
             throw new BadRequestException();
         }
 
-        if(group == null) {
-            throw new BadRequestException();
+        List<Payment> payments = paymentRepository.findByUser(user);
+        for(Payment payment : payments) {
+            paymentRepository.delete(payment);
         }
 
         user.setGroup(null);
@@ -146,11 +156,11 @@ public class GroupServiceImpl implements GroupService {
         User user = userRepository.findUserByMail(mail);
         Group group = user.getGroup();
 
-        if(!isAdmin(user, group)) {
+        if(group == null) {
             throw new BadRequestException();
         }
 
-        if(group == null) {
+        if(!isAdmin(user, group)) {
             throw new BadRequestException();
         }
 
@@ -174,7 +184,10 @@ public class GroupServiceImpl implements GroupService {
         List<MemberToAddData> members = generateMembersFromUsers(group.getMembers());
         List<MemberToAddData> availableMembers = generateMembersFromUsers(userRepository.findByGroupOrGroupIsNull(group));
 
-        return new EditGroupData(group.getName(), group.getAddress(), members, availableMembers);
+        User admin = group.getAdmin();
+        MemberToAddData adminMember = new MemberToAddData(admin.getName(), admin.getId());
+
+        return new EditGroupData(group.getName(), group.getAddress(), adminMember, members, availableMembers);
     }
 
     @Override
@@ -182,6 +195,10 @@ public class GroupServiceImpl implements GroupService {
     public void editGroup(EditGroupParams params) {
         User user = userRepository.findUserByMail(params.getRequestParams().getMail());
         Group group = user.getGroup();
+
+        if(group == null) {
+            throw new BadRequestException();
+        }
 
         if(!isAdmin(user, group)) {
             throw new BadRequestException();
