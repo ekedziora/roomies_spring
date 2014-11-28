@@ -1,4 +1,4 @@
-package pl.kedziora.emilek.roomies;
+package pl.kedziora.emilek.roomies.database.objects;
 
 public enum Gender {
 

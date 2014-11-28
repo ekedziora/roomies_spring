@@ -4,8 +4,12 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
-import pl.kedziora.emilek.json.objects.MyAccountData;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+import pl.kedziora.emilek.json.objects.data.AccountData;
 import pl.kedziora.emilek.json.objects.params.RequestParams;
 import pl.kedziora.emilek.roomies.database.objects.User;
 import pl.kedziora.emilek.roomies.service.UserService;
@@ -21,12 +25,12 @@ public class AccountController extends BaseController {
 
     @RequestMapping(value = "my", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.OK)
-    public MyAccountData getMyAccountData(@RequestBody RequestParams params) {
+    public AccountData getMyAccountData(@RequestBody RequestParams params) {
         preHandle(params);
 
         User user = userService.getUserByMail(params.getMail());
 
-        return new MyAccountData(user.getName(), user.getMail(), user.getGender().getValue(), user.getPictureLink());
+        return new AccountData(user.getName(), user.getMail(), user.getGender().getValue(), user.getPictureLink());
     }
 
 }

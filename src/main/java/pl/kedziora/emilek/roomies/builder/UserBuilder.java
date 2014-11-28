@@ -1,6 +1,6 @@
 package pl.kedziora.emilek.roomies.builder;
 
-import pl.kedziora.emilek.roomies.Gender;
+import pl.kedziora.emilek.roomies.database.objects.Gender;
 import pl.kedziora.emilek.roomies.database.objects.Group;
 import pl.kedziora.emilek.roomies.database.objects.User;
 
