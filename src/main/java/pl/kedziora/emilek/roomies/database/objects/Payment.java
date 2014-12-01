@@ -1,5 +1,7 @@
 package pl.kedziora.emilek.roomies.database.objects;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -59,4 +61,15 @@ public class Payment extends BaseEntity implements Serializable {
     public void setPaymentGroup(PaymentGroup paymentGroup) {
         this.paymentGroup = paymentGroup;
     }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("amount", amount)
+                .append("description", description)
+                .append("user", user)
+                .append("paymentGroup", paymentGroup)
+                .toString();
+    }
+
 }

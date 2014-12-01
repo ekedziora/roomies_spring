@@ -21,6 +21,8 @@ public class Group extends BaseEntity implements Serializable {
 
     private String address;
 
+    private String calendarId;
+
     @OneToOne
     @JoinColumn(name = "admin_id", nullable = false)
     private User admin;
@@ -49,6 +51,14 @@ public class Group extends BaseEntity implements Serializable {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getCalendarId() {
+        return calendarId;
+    }
+
+    public void setCalendarId(String calendarId) {
+        this.calendarId = calendarId;
     }
 
     public User getAdmin() {
@@ -80,8 +90,10 @@ public class Group extends BaseEntity implements Serializable {
         return new ToStringBuilder(this)
                 .append("name", name)
                 .append("address", address)
+                .append("calendarId", calendarId)
                 .append("admin", admin)
                 .append("members", members)
+                .append("paymentGroups", paymentGroups)
                 .toString();
     }
 

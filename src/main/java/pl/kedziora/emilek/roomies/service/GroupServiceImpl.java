@@ -1,5 +1,6 @@
 package pl.kedziora.emilek.roomies.service;
 
+import com.google.api.services.calendar.model.Calendar;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
@@ -21,7 +22,9 @@ import pl.kedziora.emilek.roomies.exception.BadRequestException;
 import pl.kedziora.emilek.roomies.repository.GroupRepository;
 import pl.kedziora.emilek.roomies.repository.PaymentRepository;
 import pl.kedziora.emilek.roomies.repository.UserRepository;
+import pl.kedziora.emilek.roomies.utils.CalendarUtils;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -83,9 +86,8 @@ public class GroupServiceImpl implements GroupService {
         );
     }
 
-
     @Override
-    public void createGroup(SaveGroupParams params) {
+    public void createGroup(SaveGroupParams params) throws IOException {
         if(StringUtils.isBlank(params.getName())) {
             throw new BadRequestException();
         }
@@ -112,6 +114,14 @@ public class GroupServiceImpl implements GroupService {
         PaymentGroup paymentGroup = new PaymentGroup();
         paymentGroup.setGroup(newGroup);
         newGroup.getPaymentGroups().add(paymentGroup);
+
+        com.google.api.services.calendar.Calendar service = CalendarUtils.getCalendarService(admin.getToken());
+
+        Calendar calendar = new Calendar();
+        calendar.setSummary(newGroup.getName());
+//        calendar.setTimeZone("");
+        calendar = service.calendars().insert(calendar).execute();
+        newGroup.setCalendarId(calendar.getId());
 
         groupRepository.save(newGroup);
     }
@@ -152,7 +162,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     @Secured("Regular user deleting group")
-    public void deleteGroup(String mail) {
+    public void deleteGroup(String mail) throws IOException {
         User user = userRepository.findUserByMail(mail);
         Group group = user.getGroup();
 
@@ -168,6 +178,9 @@ public class GroupServiceImpl implements GroupService {
             member.setGroup(null);
             userRepository.save(member);
         }
+
+        com.google.api.services.calendar.Calendar service = CalendarUtils.getCalendarService(user.getToken());
+        service.calendars().delete(group.getCalendarId()).execute();
 
         groupRepository.delete(group);
     }
@@ -192,7 +205,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     @Secured("Regular user editing group")
-    public void editGroup(EditGroupParams params) {
+    public void editGroup(EditGroupParams params) throws IOException {
         User user = userRepository.findUserByMail(params.getRequestParams().getMail());
         Group group = user.getGroup();
 
@@ -203,6 +216,8 @@ public class GroupServiceImpl implements GroupService {
         if(!isAdmin(user, group)) {
             throw new BadRequestException();
         }
+        
+        handleCalendarIfAdminChanged(group, params.getAdmin());
 
         group.setName(params.getName());
         group.setAddress(params.getAddress());
@@ -230,6 +245,17 @@ public class GroupServiceImpl implements GroupService {
         }
 
         groupRepository.save(group);
+    }
+
+    private void handleCalendarIfAdminChanged(Group group, MemberToAddData newAdmin) throws IOException {
+        User currentAdmin = group.getAdmin();
+        if(!currentAdmin.getId().equals(newAdmin.getId())) {
+            com.google.api.services.calendar.Calendar service = CalendarUtils.getCalendarService(currentAdmin.getToken());
+            Calendar calendar = service.calendars().get(group.getCalendarId()).execute();
+            service.calendars().delete(group.getCalendarId()).execute();
+            calendar = service.calendars().insert(calendar).execute();
+            group.setCalendarId(calendar.getId());
+        }
     }
 
     private List<User> generateUsersFromMembers(final List<MemberToAddData> members) {

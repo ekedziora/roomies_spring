@@ -1,6 +1,7 @@
 package pl.kedziora.emilek.roomies.database.objects;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
@@ -80,4 +81,16 @@ public class PaymentGroup extends BaseEntity implements Comparable<PaymentGroup>
 
         return fromDate.compareTo(o.getFromDate());
     }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("fromDate", fromDate)
+                .append("toDate", toDate)
+                .append("active", active)
+                .append("group", group)
+                .append("payments", payments)
+                .toString();
+    }
+
 }

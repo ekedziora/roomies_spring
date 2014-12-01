@@ -138,7 +138,9 @@ public class User extends BaseEntity implements Serializable {
                 .append("mail", mail)
                 .append("token", token)
                 .append("refreshToken", refreshToken)
+                .append("verified", verified)
                 .append("group", group)
                 .toString();
     }
+
 }

@@ -15,6 +15,7 @@ import pl.kedziora.emilek.json.objects.params.SaveGroupParams;
 import pl.kedziora.emilek.roomies.service.GroupService;
 import pl.kedziora.emilek.roomies.service.UserService;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -62,7 +63,7 @@ public class GroupController extends BaseController {
 
     @RequestMapping(value = "save", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.OK)
-    public void saveGroup(@RequestBody SaveGroupParams params) {
+    public void saveGroup(@RequestBody SaveGroupParams params) throws IOException {
         preHandle(params.getRequestParams());
 
         groupService.createGroup(params);
@@ -78,7 +79,7 @@ public class GroupController extends BaseController {
 
     @RequestMapping(value = "delete", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.OK)
-    public void deleteGroup(@RequestBody RequestParams params) {
+    public void deleteGroup(@RequestBody RequestParams params) throws IOException {
         preHandle(params);
 
         groupService.deleteGroup(params.getMail());
@@ -94,7 +95,7 @@ public class GroupController extends BaseController {
 
     @RequestMapping(value = "edit", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.OK)
-    public void editGroup(@RequestBody EditGroupParams params) {
+    public void editGroup(@RequestBody EditGroupParams params) throws IOException {
         preHandle(params.getRequestParams());
 
         groupService.editGroup(params);
