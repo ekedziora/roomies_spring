@@ -1,7 +1,7 @@
 package pl.kedziora.emilek.roomies.service;
 
-import pl.kedziora.emilek.json.objects.UserAccountData;
 import pl.kedziora.emilek.json.objects.data.GroupData;
+import pl.kedziora.emilek.json.objects.response.UserAccountDataResponse;
 import pl.kedziora.emilek.roomies.database.objects.User;
 
 public interface UserService {
@@ -14,7 +14,7 @@ public interface UserService {
 
     void saveUser(User user);
 
-    void saveVerifiedUserData(User user, UserAccountData accountData);
+    void saveVerifiedUserData(User user, UserAccountDataResponse accountData);
 
     GroupData getUserGroupDataByMail(String mail);
 }

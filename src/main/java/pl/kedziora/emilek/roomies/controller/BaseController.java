@@ -19,14 +19,18 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import pl.kedziora.emilek.json.objects.GoogleErrorResponse;
-import pl.kedziora.emilek.json.objects.TokenResponse;
-import pl.kedziora.emilek.json.objects.UserAccountData;
 import pl.kedziora.emilek.json.objects.params.RequestParams;
+import pl.kedziora.emilek.json.objects.response.GoogleErrorResponse;
+import pl.kedziora.emilek.json.objects.response.TokenResponse;
+import pl.kedziora.emilek.json.objects.response.UserAccountDataResponse;
 import pl.kedziora.emilek.json.utils.CoreUtils;
 import pl.kedziora.emilek.roomies.builder.UserBuilder;
 import pl.kedziora.emilek.roomies.database.objects.User;
-import pl.kedziora.emilek.roomies.exception.*;
+import pl.kedziora.emilek.roomies.exception.BadRequestException;
+import pl.kedziora.emilek.roomies.exception.ConflictException;
+import pl.kedziora.emilek.roomies.exception.ForbiddenException;
+import pl.kedziora.emilek.roomies.exception.InternalServerErrorException;
+import pl.kedziora.emilek.roomies.exception.UnauthorizedException;
 import pl.kedziora.emilek.roomies.service.UserService;
 
 import java.io.IOException;
@@ -146,7 +150,7 @@ public abstract class BaseController {
         try {
             HttpResponse response = client.execute(request);
             InputStreamReader reader = new InputStreamReader(response.getEntity().getContent(), "UTF-8");
-            UserAccountData userAccountData = new Gson().fromJson(reader, UserAccountData.class);
+            UserAccountDataResponse userAccountData = new Gson().fromJson(reader, UserAccountDataResponse.class);
             userService.saveVerifiedUserData(user, userAccountData);
         } catch (IOException e) {
             log.error("Exception during executing request", e);

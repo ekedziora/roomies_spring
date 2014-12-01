@@ -8,10 +8,10 @@ import org.apache.commons.lang3.Validate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.kedziora.emilek.json.objects.UserAccountData;
 import pl.kedziora.emilek.json.objects.data.GroupData;
 import pl.kedziora.emilek.json.objects.data.GroupMemberData;
-import pl.kedziora.emilek.roomies.Gender;
+import pl.kedziora.emilek.json.objects.response.UserAccountDataResponse;
+import pl.kedziora.emilek.roomies.database.objects.Gender;
 import pl.kedziora.emilek.roomies.database.objects.Group;
 import pl.kedziora.emilek.roomies.database.objects.User;
 import pl.kedziora.emilek.roomies.repository.UserRepository;
@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void saveVerifiedUserData(User user, UserAccountData accountData) {
+    public void saveVerifiedUserData(User user, UserAccountDataResponse accountData) {
         user.setFirstName(accountData.getFirstName());
         user.setGender(Gender.fromString(accountData.getGender()));
         user.setLastName(accountData.getLastName());
