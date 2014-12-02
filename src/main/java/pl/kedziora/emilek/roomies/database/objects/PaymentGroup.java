@@ -3,10 +3,10 @@ package pl.kedziora.emilek.roomies.database.objects;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hibernate.annotations.Type;
+import org.joda.time.LocalDate;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -15,11 +15,11 @@ public class PaymentGroup extends BaseEntity implements Comparable<PaymentGroup>
 
     private static final long serialVersionUID = 3179299787402612632L;
 
-    @Type(type = "date")
-    private Date fromDate = new Date();
+    @Type(type="org.jadira.usertype.dateandtime.joda.PersistentLocalDate")
+    private LocalDate fromDate = new LocalDate();
 
-    @Type(type = "date")
-    private Date toDate;
+    @Type(type="org.jadira.usertype.dateandtime.joda.PersistentLocalDate")
+    private LocalDate toDate;
 
     @Type(type = "true_false")
     private Boolean active = true;
@@ -34,19 +34,19 @@ public class PaymentGroup extends BaseEntity implements Comparable<PaymentGroup>
     public PaymentGroup() {
     }
 
-    public Date getFromDate() {
+    public LocalDate getFromDate() {
         return fromDate;
     }
 
-    public void setFromDate(Date from) {
+    public void setFromDate(LocalDate from) {
         this.fromDate = from;
     }
 
-    public Date getToDate() {
+    public LocalDate getToDate() {
         return toDate;
     }
 
-    public void setToDate(Date to) {
+    public void setToDate(LocalDate to) {
         this.toDate = to;
     }
 

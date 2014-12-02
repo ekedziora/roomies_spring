@@ -35,6 +35,9 @@ public class Group extends BaseEntity implements Serializable {
     @SortNatural
     private SortedSet<PaymentGroup> paymentGroups = Sets.newTreeSet();
 
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
+    private List<Event> events;
+
     public Group() {}
 
     public String getName() {
@@ -85,6 +88,14 @@ public class Group extends BaseEntity implements Serializable {
         this.paymentGroups = paymentGroups;
     }
 
+    public List<Event> getEvents() {
+        return events;
+    }
+
+    public void setEvents(List<Event> events) {
+        this.events = events;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this)
@@ -94,6 +105,7 @@ public class Group extends BaseEntity implements Serializable {
                 .append("admin", admin)
                 .append("members", members)
                 .append("paymentGroups", paymentGroups)
+                .append("events", events)
                 .toString();
     }
 
