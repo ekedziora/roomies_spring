@@ -5,7 +5,6 @@ import org.joda.time.LocalDate;
 import pl.kedziora.emilek.json.objects.enums.EventType;
 import pl.kedziora.emilek.json.objects.enums.Interval;
 import pl.kedziora.emilek.json.objects.enums.PunishmentType;
-import pl.kedziora.emilek.json.objects.enums.ReminderType;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -36,17 +35,6 @@ public class Event extends BaseEntity implements Serializable {
 
     @Type(type = "true_false")
     private Boolean switchExecutor;
-
-    @Type(type = "true_false")
-    private Boolean withReminder;
-
-    @Enumerated(EnumType.STRING)
-    private ReminderType reminderType;
-
-    @Enumerated(EnumType.STRING)
-    private Interval reminderInterval;
-
-    private Integer reminderNumber;
 
     @Type(type = "true_false")
     private Boolean withPunishment;
@@ -129,38 +117,6 @@ public class Event extends BaseEntity implements Serializable {
 
     public void setSwitchExecutor(Boolean switchExecutor) {
         this.switchExecutor = switchExecutor;
-    }
-
-    public Boolean getWithReminder() {
-        return withReminder;
-    }
-
-    public void setWithReminder(Boolean withReminder) {
-        this.withReminder = withReminder;
-    }
-
-    public ReminderType getReminderType() {
-        return reminderType;
-    }
-
-    public void setReminderType(ReminderType reminderType) {
-        this.reminderType = reminderType;
-    }
-
-    public Interval getReminderInterval() {
-        return reminderInterval;
-    }
-
-    public void setReminderInterval(Interval reminderInterval) {
-        this.reminderInterval = reminderInterval;
-    }
-
-    public Integer getReminderNumber() {
-        return reminderNumber;
-    }
-
-    public void setReminderNumber(Integer reminderNumber) {
-        this.reminderNumber = reminderNumber;
     }
 
     public Boolean getWithPunishment() {
