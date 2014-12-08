@@ -6,9 +6,14 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import pl.kedziora.emilek.json.objects.data.AddEventData;
 import pl.kedziora.emilek.json.objects.data.EventData;
+import pl.kedziora.emilek.json.objects.data.EventEntryData;
 import pl.kedziora.emilek.json.objects.params.AddEventParams;
+import pl.kedziora.emilek.json.objects.params.DeleteEventParams;
+import pl.kedziora.emilek.json.objects.params.DoneEntryParams;
 import pl.kedziora.emilek.json.objects.params.RequestParams;
 import pl.kedziora.emilek.roomies.service.EventService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("events")
@@ -41,4 +46,27 @@ public class EventController extends BaseController {
         return eventService.getEventData(params.getMail());
     }
 
+    @RequestMapping(value = "allTasks", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.OK)
+    public List<EventEntryData> getAllTasks(@RequestBody RequestParams params) {
+        preHandle(params);
+
+        return eventService.getAllEntriesForUser(params.getMail());
+    }
+
+    @RequestMapping(value = "delete", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteEvent(@RequestBody DeleteEventParams params) {
+        preHandle(params.getRequestParams());
+
+        eventService.deleteEvent(params);
+    }
+
+    @RequestMapping(value = "done", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.OK)
+    public void entryDone(@RequestBody DoneEntryParams params) {
+        preHandle(params.getRequestParams());
+
+        eventService.entryDone(params);
+    }
 }

@@ -120,7 +120,7 @@ public class GroupServiceImpl implements GroupService {
         Calendar calendar = new Calendar();
         calendar.setSummary(newGroup.getName());
 //        calendar.setTimeZone("");
-        calendar = service.calendars().insert(calendar).execute();
+//        calendar = service.calendars().insert(calendar).execute();
         newGroup.setCalendarId(calendar.getId());
 
         groupRepository.save(newGroup);
@@ -180,7 +180,7 @@ public class GroupServiceImpl implements GroupService {
         }
 
         com.google.api.services.calendar.Calendar service = CalendarUtils.getCalendarService(user.getToken());
-        service.calendars().delete(group.getCalendarId()).execute();
+//        service.calendars().delete(group.getCalendarId()).execute();
 
         groupRepository.delete(group);
     }
@@ -251,10 +251,10 @@ public class GroupServiceImpl implements GroupService {
         User currentAdmin = group.getAdmin();
         if(!currentAdmin.getId().equals(newAdmin.getId())) {
             com.google.api.services.calendar.Calendar service = CalendarUtils.getCalendarService(currentAdmin.getToken());
-            Calendar calendar = service.calendars().get(group.getCalendarId()).execute();
-            service.calendars().delete(group.getCalendarId()).execute();
-            calendar = service.calendars().insert(calendar).execute();
-            group.setCalendarId(calendar.getId());
+//            Calendar calendar = service.calendars().get(group.getCalendarId()).execute();
+//            service.calendars().delete(group.getCalendarId()).execute();
+//            calendar = service.calendars().insert(calendar).execute();
+//            group.setCalendarId(calendar.getId());
         }
     }
 

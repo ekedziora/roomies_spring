@@ -8,12 +8,16 @@ import com.google.common.collect.Lists;
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.kedziora.emilek.json.objects.data.*;
 import pl.kedziora.emilek.json.objects.enums.EventType;
 import pl.kedziora.emilek.json.objects.enums.Interval;
 import pl.kedziora.emilek.json.objects.params.AddEventParams;
+import pl.kedziora.emilek.json.objects.params.DeleteEventParams;
+import pl.kedziora.emilek.json.objects.params.DoneEntryParams;
+import pl.kedziora.emilek.roomies.annotation.Secured;
 import pl.kedziora.emilek.roomies.database.objects.*;
 import pl.kedziora.emilek.roomies.exception.BadRequestException;
 import pl.kedziora.emilek.roomies.repository.EventEntryRepository;
@@ -89,6 +93,7 @@ public class EventServiceImpl implements EventService {
         event.setSwitchExecutor(params.getSwitchExecutor());
         event.setWithPunishment(params.getWithPunishment());
         event.setWithReminder(params.getAddReminder());
+        event.setMembers(generateUsersFromMembers(params.getMembers()));
         event.setEntries(handleCreateEventEntries(event, params.getMembers()));
 
         eventRepository.save(event);
@@ -177,7 +182,8 @@ public class EventServiceImpl implements EventService {
             @Override
             public boolean apply(@Nullable Event event) {
                 return EventType.CYCLIC.equals(event.getEventType()) ||
-                        EventType.ONCE.equals(event.getEventType()) && EventEntryStatus.NOT_FINISHED.equals(event.getEntries().get(0).getEventEntryStatus());
+                        EventType.ONCE.equals(event.getEventType()) &&
+                                EventEntryStatus.NOT_FINISHED.equals(event.getEntries().get(0).getEventEntryStatus());
             }
         }));
 
@@ -185,37 +191,76 @@ public class EventServiceImpl implements EventService {
                 Collections2.transform(events, new Function<Event, SingleEventData>() {
                     @Override
                     public SingleEventData apply(@Nullable Event event) {
-                        return new SingleEventData(event.getEventName(), event.getEventType(), event.getIntervalNumber(),
-                                event.getEventInterval(), event.getWithPunishment());
+                        return new SingleEventData(event.getId(), event.getEventName(), event.getEventType(), event.getIntervalNumber(),
+                                event.getEventInterval(), event.getWithPunishment(), generateMembersFromUsers(event.getMembers()));
                     }
                 })
         );
     }
 
     private List<EventEntryData> getNextEntries(User user) {
-        List<EventEntry> nextEntries = eventEntryRepository.findByExecutorAndEndDateLessThan(user, new LocalDate());
+        List<EventEntry> nextEntries = eventEntryRepository.findByExecutorAndStartDateGreaterThan(user, new LocalDate(), new PageRequest(0, 10));
 
-        return Lists.newArrayList(
-                Collections2.transform(nextEntries, new Function<EventEntry, EventEntryData>() {
-                    @Override
-                    public EventEntryData apply(@Nullable EventEntry eventEntry) {
-                        return new EventEntryData(eventEntry.getStartDate().toString(), eventEntry.getEndDate().toString(), eventEntry.getEventEntryStatus().getLabel());
-                    }
-                })
-        );
+        return generateEventEntryData(nextEntries);
     }
 
     private List<EventEntryData> getCurrentEntries(User user) {
-        List<EventEntry> currentEntries = eventEntryRepository.findByExecutorAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndEventEntryStatus(user, new LocalDate(), EventEntryStatus.NOT_FINISHED);
+        List<EventEntry> currentEntries = eventEntryRepository.findByExecutorAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndEventEntryStatus(user, new LocalDate(), new LocalDate(), EventEntryStatus.NOT_FINISHED);
 
+        return generateEventEntryData(currentEntries);
+    }
+
+    private List<EventEntryData> generateEventEntryData(List<EventEntry> entries) {
         return Lists.newArrayList(
-                Collections2.transform(currentEntries, new Function<EventEntry, EventEntryData>() {
+                Collections2.transform(entries, new Function<EventEntry, EventEntryData>() {
                     @Override
                     public EventEntryData apply(@Nullable EventEntry eventEntry) {
-                        return new EventEntryData(eventEntry.getStartDate().toString(), eventEntry.getEndDate().toString(), eventEntry.getEventEntryStatus().getLabel());
+                        return new EventEntryData(eventEntry.getId(), eventEntry.getParent().getEventName(), eventEntry.getStartDate().toString(),
+                                eventEntry.getEndDate().toString(), eventEntry.getEventEntryStatus().getLabel());
                     }
                 })
         );
     }
 
+    @Override
+    public List<EventEntryData> getAllEntriesForUser(String mail) {
+        User user = userRepository.findUserByMail(mail);
+        Group group = user.getGroup();
+
+        if(group == null) {
+            throw new BadRequestException();
+        }
+
+        List<EventEntry> entries = eventEntryRepository.findByExecutor(user);
+        return generateEventEntryData(entries);
+    }
+
+    @Override
+    @Secured("Other user deleting someone's event")
+    public void deleteEvent(DeleteEventParams params) {
+        User user = userRepository.findUserByMail(params.getRequestParams().getMail());
+        Event event = eventRepository.findOne(params.getPaymentId());
+
+        if(!event.getAdmin().equals(user)) {
+            throw new BadRequestException();
+        }
+
+        eventRepository.delete(event);
+    }
+
+    @Override
+    @Secured("Other user mark as done someone's event entry")
+    public void entryDone(DoneEntryParams params) {
+        User user = userRepository.findUserByMail(params.getRequestParams().getMail());
+        EventEntry eventEntry = eventEntryRepository.findOne(params.getEntryId());
+
+        if(!eventEntry.getExecutor().equals(user)) {
+            throw new BadRequestException();
+        }
+
+        eventEntry.setEventEntryStatus(EventEntryStatus.FINISHED);
+        //jesli z punishmentem to dodatkowe rzeczy
+
+        eventEntryRepository.save(eventEntry);
+    }
 }

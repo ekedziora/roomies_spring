@@ -67,6 +67,10 @@ public class Event extends BaseEntity implements Serializable {
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     private List<EventEntry> entries;
 
+    @ManyToMany
+    @JoinTable(name="event_members", joinColumns={@JoinColumn(name="event_id")}, inverseJoinColumns={@JoinColumn(name="user_id")})
+    List<User> members;
+
     public Event() {
 
     }
@@ -205,5 +209,13 @@ public class Event extends BaseEntity implements Serializable {
 
     public void setEntries(List<EventEntry> entries) {
         this.entries = entries;
+    }
+
+    public List<User> getMembers() {
+        return members;
+    }
+
+    public void setMembers(List<User> members) {
+        this.members = members;
     }
 }
