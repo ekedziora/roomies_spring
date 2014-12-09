@@ -6,9 +6,12 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.joda.time.LocalDate;
+import org.joda.time.LocalDateTime;
 import org.joda.time.Period;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.kedziora.emilek.json.objects.data.*;
@@ -18,6 +21,7 @@ import pl.kedziora.emilek.json.objects.params.AddEventParams;
 import pl.kedziora.emilek.json.objects.params.DeleteEventParams;
 import pl.kedziora.emilek.json.objects.params.DoneEntryParams;
 import pl.kedziora.emilek.roomies.annotation.Secured;
+import pl.kedziora.emilek.roomies.builder.EventBuilder;
 import pl.kedziora.emilek.roomies.database.objects.*;
 import pl.kedziora.emilek.roomies.exception.BadRequestException;
 import pl.kedziora.emilek.roomies.repository.EventEntryRepository;
@@ -32,6 +36,9 @@ import java.util.List;
 @Service
 @Transactional
 public class EventServiceImpl implements EventService {
+
+    @Autowired
+    private ApplicationContext applicationContext;
 
     @Autowired
     private UserRepository userRepository;
@@ -76,24 +83,21 @@ public class EventServiceImpl implements EventService {
             throw new BadRequestException();
         }
 
-        Event event = new Event();
-        event.setGroup(group);
-        event.setAdmin(user);
-        event.setEndDate(new LocalDate(params.getEndDate()));
-        event.setEventType(params.getEventType());
-        event.setEventInterval(params.getInterval());
-        event.setIntervalNumber(params.getIntervalNumber());
-        event.setPunishmentAmount(params.getPunishmentAmount());
-        event.setPunishmentType(params.getPunishmentType());
-        event.setEventName(params.getName());
-        event.setReminderInterval(params.getReminderInterval());
-        event.setReminderNumber(params.getReminderNumber());
-        event.setReminderType(params.getReminderType());
-        event.setStartDate(new LocalDate(params.getStartDate()));
-        event.setSwitchExecutor(params.getSwitchExecutor());
-        event.setWithPunishment(params.getWithPunishment());
-        event.setWithReminder(params.getAddReminder());
-        event.setMembers(generateUsersFromMembers(params.getMembers()));
+        Event event = EventBuilder.anEvent()
+                .withGroup(group)
+                .withAdmin(user)
+                .withEndDate(new LocalDate(params.getEndDate()))
+                .withEventType(params.getEventType())
+                .withEventInterval(params.getInterval())
+                .withIntervalNumber(params.getIntervalNumber())
+                .withPunishmentAmount(params.getPunishmentAmount())
+                .withPunishmentType(params.getPunishmentType())
+                .withEventName(params.getName())
+                .withStartDate(new LocalDate(params.getStartDate()))
+                .withSwitchExecutor(params.getSwitchExecutor())
+                .withWithPunishment(params.getWithPunishment())
+                .withMembers(generateUsersFromMembers(params.getMembers()))
+                .build();
         event.setEntries(handleCreateEventEntries(event, params.getMembers()));
 
         eventRepository.save(event);
@@ -134,13 +138,20 @@ public class EventServiceImpl implements EventService {
             }
 
             Iterator<User> cycleIterator = Iterables.cycle(executors).iterator();
+            ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+            scheduler.initialize();
 
             for(; end.isBefore(CalendarUtils.MAGIC_END_DATE); start = start.plus(period), end = end.plus(period)) {
-                EventEntry eventEntry = new EventEntry();
+                final EventEntry eventEntry = new EventEntry();
                 eventEntry.setStartDate(start);
                 eventEntry.setEndDate(end);
                 eventEntry.setParent(event);
                 eventEntry.setExecutor(cycleIterator.next());
+                if(event.getWithPunishment()) {
+                    eventEntry.setEndEntryScheduler(
+                            scheduler.schedule((Runnable) applicationContext.getBean("entryEndTask", eventEntry.getUuid()),
+                            new LocalDateTime().plusSeconds(30).toDate()));
+                }
                 entries.add(eventEntry);
             }
         }

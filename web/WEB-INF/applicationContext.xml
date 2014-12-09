@@ -52,6 +52,10 @@
 
     <bean id="gsonConverter" class="org.springframework.http.converter.json.GsonHttpMessageConverter" />
 
+    <bean id="entryEndTask" class="pl.kedziora.emilek.roomies.task.EntryEndTask" scope="prototype" >
+        <constructor-arg value="default"/>
+    </bean>
+
     <tx:annotation-driven transaction-manager="transactionManager" />
 
     <mvc:annotation-driven>

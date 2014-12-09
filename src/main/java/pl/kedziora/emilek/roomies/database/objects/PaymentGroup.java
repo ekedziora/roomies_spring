@@ -31,6 +31,9 @@ public class PaymentGroup extends BaseEntity implements Comparable<PaymentGroup>
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "paymentGroup")
     private List<Payment> payments = Lists.newArrayList();
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "paymentGroup")
+    private List<FinancialPunishment> financialPunishments = Lists.newArrayList();
+
     public PaymentGroup() {
     }
 

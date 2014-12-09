@@ -1,10 +1,12 @@
 package pl.kedziora.emilek.roomies.database.objects;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hibernate.annotations.Type;
 import org.joda.time.LocalDate;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.concurrent.ScheduledFuture;
 
 @Entity
 @Table(name = "event_entries")
@@ -28,6 +30,12 @@ public class EventEntry extends BaseEntity implements Serializable {
     @ManyToOne
     @JoinColumn(name = "event_id")
     private Event parent;
+
+    @Transient
+    private ScheduledFuture<?> endEntryScheduler;
+
+    @Transient
+    private ScheduledFuture<?> confirmationCheckScheduler;
 
     public EventEntry() {
     }
@@ -70,5 +78,32 @@ public class EventEntry extends BaseEntity implements Serializable {
 
     public void setParent(Event parent) {
         this.parent = parent;
+    }
+
+    public ScheduledFuture<?> getEndEntryScheduler() {
+        return endEntryScheduler;
+    }
+
+    public void setEndEntryScheduler(ScheduledFuture<?> endEntryScheduler) {
+        this.endEntryScheduler = endEntryScheduler;
+    }
+
+    public ScheduledFuture<?> getConfirmationCheckScheduler() {
+        return confirmationCheckScheduler;
+    }
+
+    public void setConfirmationCheckScheduler(ScheduledFuture<?> confirmationCheckScheduler) {
+        this.confirmationCheckScheduler = confirmationCheckScheduler;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("parent", parent)
+                .append("executor", executor)
+                .append("eventEntryStatus", eventEntryStatus)
+                .append("endDate", endDate)
+                .append("startDate", startDate)
+                .toString();
     }
 }

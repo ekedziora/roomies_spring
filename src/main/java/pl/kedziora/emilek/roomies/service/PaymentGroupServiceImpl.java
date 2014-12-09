@@ -4,9 +4,11 @@ import com.google.common.collect.Maps;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pl.kedziora.emilek.roomies.database.objects.FinancialPunishment;
 import pl.kedziora.emilek.roomies.database.objects.Payment;
 import pl.kedziora.emilek.roomies.database.objects.PaymentGroup;
 import pl.kedziora.emilek.roomies.database.objects.User;
+import pl.kedziora.emilek.roomies.repository.FinancialPunishmentRepository;
 import pl.kedziora.emilek.roomies.repository.PaymentRepository;
 
 import java.math.BigDecimal;
@@ -19,6 +21,9 @@ public class PaymentGroupServiceImpl implements PaymentGroupService {
 
     @Autowired
     private PaymentRepository paymentRepository;
+
+    @Autowired
+    private FinancialPunishmentRepository financialPunishmentRepository;
 
     /**
      * Na przyszłość do przeliczania salda wszystkich userów w grupie
@@ -64,9 +69,15 @@ public class PaymentGroupServiceImpl implements PaymentGroupService {
         BigDecimal average = calculateAverage(paymentGroup);
 
         List<Payment> userPayments = paymentRepository.findByUserAndPaymentGroup(user, paymentGroup);
+        List<FinancialPunishment> userPunishments = financialPunishmentRepository.findByUserAndPaymentGroup(user, paymentGroup);
         BigDecimal userSum = sumPayments(userPayments);
 
-        return userSum.subtract(average);
+        BigDecimal result = userSum.subtract(average);
+        for(FinancialPunishment punishment : userPunishments) {
+            result = result.subtract(punishment.getAmount());
+        }
+
+        return result;
     }
 
     private BigDecimal calculateAverage(PaymentGroup paymentGroup) {
