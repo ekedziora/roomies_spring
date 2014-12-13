@@ -30,6 +30,10 @@ public class EventEntry extends BaseEntity implements Serializable, Comparable<E
     @JoinColumn(name = "event_id")
     private Event parent;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "confirmation_id")
+    private ExecutionConfirmation confirmation;
+
     @Transient
     private Integer endEntrySchedulerKey;
 
@@ -77,6 +81,14 @@ public class EventEntry extends BaseEntity implements Serializable, Comparable<E
 
     public void setParent(Event parent) {
         this.parent = parent;
+    }
+
+    public ExecutionConfirmation getConfirmation() {
+        return confirmation;
+    }
+
+    public void setConfirmation(ExecutionConfirmation confirmation) {
+        this.confirmation = confirmation;
     }
 
     public Integer getEndEntrySchedulerKey() {

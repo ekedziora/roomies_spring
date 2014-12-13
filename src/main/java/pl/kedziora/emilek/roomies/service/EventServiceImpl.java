@@ -51,6 +51,9 @@ public class EventServiceImpl implements EventService {
     @Autowired
     private EventEntryRepository eventEntryRepository;
 
+    @Autowired
+    private ConfirmationService confirmationService;
+
     @Override
     public AddEventData getAddEventData(String mail) {
         User user = userRepository.findUserByMail(mail);
@@ -97,6 +100,8 @@ public class EventServiceImpl implements EventService {
                 .withEventName(params.getName())
                 .withStartDate(new LocalDate(params.getStartDate()))
                 .withSwitchExecutor(params.getSwitchExecutor())
+                .withConfirmationInterval(params.getConfirmationInterval())
+                .withConfirmationNumber(params.getConfirmationNumber())
                 .withWithPunishment(params.getWithPunishment())
                 .withMembers(generateUsersFromMembers(params.getMembers()))
                 .build();
@@ -248,6 +253,7 @@ public class EventServiceImpl implements EventService {
             throw new BadRequestException();
         }
 
+        CoreUtils.handleSchedulersOnEntryDelete(event.getEntries());
         eventRepository.delete(event);
     }
 
@@ -262,7 +268,10 @@ public class EventServiceImpl implements EventService {
         }
 
         eventEntry.setEventEntryStatus(EventEntryStatus.FINISHED);
-        //jesli z punishmentem to dodatkowe rzeczy
+        CoreUtils.deleteEndEntryScheduler(eventEntry);
+        if(eventEntry.getParent().getWithPunishment()) {
+            confirmationService.startConfirmationProcess(eventEntry);
+        }
 
         eventEntryRepository.save(eventEntry);
     }

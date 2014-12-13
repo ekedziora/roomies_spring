@@ -42,22 +42,30 @@ public class CoreUtils {
 
     public static void handleSchedulersOnEntryDelete(List<EventEntry> deletedEntries) {
         for(EventEntry entry : deletedEntries) {
-            Integer endEntrySchedulerKey = entry.getEndEntrySchedulerKey();
-            Integer confirmationCheckSchedulerKey = entry.getConfirmationCheckSchedulerKey();
+            deleteEndEntryScheduler(entry);
+            deleteConfirmationCheckScheduler(entry);
+        }
+    }
 
-            if (endEntrySchedulerKey != null && schedulersMap.containsKey(endEntrySchedulerKey)) {
-                ScheduledFuture<?> task = schedulersMap.get(endEntrySchedulerKey);
-                task.cancel(true);
-                schedulersMap.remove(endEntrySchedulerKey);
-                entry.setEndEntrySchedulerKey(null);
-            }
+    public static void deleteEndEntryScheduler(EventEntry entry) {
+        Integer endEntrySchedulerKey = entry.getEndEntrySchedulerKey();
 
-            if (confirmationCheckSchedulerKey != null && schedulersMap.containsKey(confirmationCheckSchedulerKey)) {
-                ScheduledFuture<?> task = schedulersMap.get(confirmationCheckSchedulerKey);
-                task.cancel(true);
-                schedulersMap.remove(confirmationCheckSchedulerKey);
-                entry.setConfirmationCheckSchedulerKey(null);
-            }
+        if (endEntrySchedulerKey != null && schedulersMap.containsKey(endEntrySchedulerKey)) {
+            ScheduledFuture<?> task = schedulersMap.get(endEntrySchedulerKey);
+            task.cancel(true);
+            schedulersMap.remove(endEntrySchedulerKey);
+            entry.setEndEntrySchedulerKey(null);
+        }
+    }
+
+    public static void deleteConfirmationCheckScheduler(EventEntry entry) {
+        Integer confirmationCheckSchedulerKey = entry.getConfirmationCheckSchedulerKey();
+
+        if (confirmationCheckSchedulerKey != null && schedulersMap.containsKey(confirmationCheckSchedulerKey)) {
+            ScheduledFuture<?> task = schedulersMap.get(confirmationCheckSchedulerKey);
+            task.cancel(true);
+            schedulersMap.remove(confirmationCheckSchedulerKey);
+            entry.setConfirmationCheckSchedulerKey(null);
         }
     }
 
