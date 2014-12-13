@@ -51,9 +51,6 @@ public class EventServiceImpl implements EventService {
     @Autowired
     private EventEntryRepository eventEntryRepository;
 
-    @Autowired
-    private ConfirmationService confirmationService;
-
     @Override
     public AddEventData getAddEventData(String mail) {
         User user = userRepository.findUserByMail(mail);
@@ -100,7 +97,6 @@ public class EventServiceImpl implements EventService {
                 .withEventName(params.getName())
                 .withStartDate(new LocalDate(params.getStartDate()))
                 .withSwitchExecutor(params.getSwitchExecutor())
-                .withConfirmationInterval(params.getConfirmationInterval())
                 .withConfirmationNumber(params.getConfirmationNumber())
                 .withWithPunishment(params.getWithPunishment())
                 .withMembers(generateUsersFromMembers(params.getMembers()))
@@ -144,7 +140,7 @@ public class EventServiceImpl implements EventService {
                 if(event.getWithPunishment()) {
                     ScheduledFuture<?> task = scheduler.schedule(
                             (Runnable) applicationContext.getBean("entryEndTask", eventEntry.getUuid()),
-                            new LocalDateTime().plusSeconds(30).toDate());
+                            end.plusDays(1).toDate());
                     int taskKey = CoreUtils.addTask(task);
                     eventEntry.setEndEntrySchedulerKey(taskKey);
                 }
@@ -270,7 +266,10 @@ public class EventServiceImpl implements EventService {
         eventEntry.setEventEntryStatus(EventEntryStatus.FINISHED);
         CoreUtils.deleteEndEntryScheduler(eventEntry);
         if(eventEntry.getParent().getWithPunishment()) {
-            confirmationService.startConfirmationProcess(eventEntry);
+            ExecutionConfirmation confirmation = new ExecutionConfirmation();
+            confirmation.setEventEntry(eventEntry);
+            confirmation.setEndDateTime(new LocalDateTime().plusHours(eventEntry.getParent().getConfirmationNumber()));
+            eventEntry.setConfirmation(confirmation);
         }
 
         eventEntryRepository.save(eventEntry);

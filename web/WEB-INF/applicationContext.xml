@@ -56,10 +56,6 @@
         <constructor-arg value="default"/>
     </bean>
 
-    <bean id="confirmationEndTask" class="pl.kedziora.emilek.roomies.task.ConfirmationEndTask" scope="prototype" >
-        <constructor-arg value="default"/>
-    </bean>
-
     <tx:annotation-driven transaction-manager="transactionManager" />
 
     <mvc:annotation-driven>

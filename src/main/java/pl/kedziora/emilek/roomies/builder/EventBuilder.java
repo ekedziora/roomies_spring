@@ -21,7 +21,6 @@ public class EventBuilder {
     private Interval eventInterval;
     private Integer intervalNumber;
     private Boolean switchExecutor;
-    private Interval confirmationInterval;
     private Integer confirmationNumber;
     private Boolean withPunishment;
     private PunishmentType punishmentType;
@@ -72,11 +71,6 @@ public class EventBuilder {
         return this;
     }
 
-    public EventBuilder withConfirmationInterval(Interval confirmationInterval) {
-        this.confirmationInterval = confirmationInterval;
-        return this;
-    }
-
     public EventBuilder withConfirmationNumber(Integer confirmationNumber) {
         this.confirmationNumber = confirmationNumber;
         return this;
@@ -118,7 +112,7 @@ public class EventBuilder {
     }
 
     public EventBuilder but() {
-        return anEvent().withEventType(eventType).withEventName(eventName).withStartDate(startDate).withEndDate(endDate).withEventInterval(eventInterval).withIntervalNumber(intervalNumber).withSwitchExecutor(switchExecutor).withConfirmationInterval(confirmationInterval).withConfirmationNumber(confirmationNumber).withWithPunishment(withPunishment).withPunishmentType(punishmentType).withPunishmentAmount(punishmentAmount).withGroup(group).withAdmin(admin).withEntries(entries).withMembers(members);
+        return anEvent().withEventType(eventType).withEventName(eventName).withStartDate(startDate).withEndDate(endDate).withEventInterval(eventInterval).withIntervalNumber(intervalNumber).withSwitchExecutor(switchExecutor).withConfirmationNumber(confirmationNumber).withWithPunishment(withPunishment).withPunishmentType(punishmentType).withPunishmentAmount(punishmentAmount).withGroup(group).withAdmin(admin).withEntries(entries).withMembers(members);
     }
 
     public Event build() {
@@ -130,7 +124,6 @@ public class EventBuilder {
         event.setEventInterval(eventInterval);
         event.setIntervalNumber(intervalNumber);
         event.setSwitchExecutor(switchExecutor);
-        event.setConfirmationInterval(confirmationInterval);
         event.setConfirmationNumber(confirmationNumber);
         event.setWithPunishment(withPunishment);
         event.setPunishmentType(punishmentType);

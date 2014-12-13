@@ -36,9 +36,6 @@ public class Event extends BaseEntity implements Serializable {
     @Type(type = "true_false")
     private Boolean switchExecutor;
 
-    @Enumerated(EnumType.STRING)
-    private Interval confirmationInterval;
-
     private Integer confirmationNumber;
 
     @Type(type = "true_false")
@@ -178,14 +175,6 @@ public class Event extends BaseEntity implements Serializable {
 
     public void setMembers(List<User> members) {
         this.members = members;
-    }
-
-    public Interval getConfirmationInterval() {
-        return confirmationInterval;
-    }
-
-    public void setConfirmationInterval(Interval confirmationInterval) {
-        this.confirmationInterval = confirmationInterval;
     }
 
     public Integer getConfirmationNumber() {

@@ -37,9 +37,6 @@ public class EventEntry extends BaseEntity implements Serializable, Comparable<E
     @Transient
     private Integer endEntrySchedulerKey;
 
-    @Transient
-    private Integer confirmationCheckSchedulerKey;
-
     public EventEntry() {
     }
 
@@ -97,14 +94,6 @@ public class EventEntry extends BaseEntity implements Serializable, Comparable<E
 
     public void setEndEntrySchedulerKey(Integer endEntrySchedulerKey) {
         this.endEntrySchedulerKey = endEntrySchedulerKey;
-    }
-
-    public Integer getConfirmationCheckSchedulerKey() {
-        return confirmationCheckSchedulerKey;
-    }
-
-    public void setConfirmationCheckSchedulerKey(Integer confirmationCheckSchedulerKey) {
-        this.confirmationCheckSchedulerKey = confirmationCheckSchedulerKey;
     }
 
     @Override

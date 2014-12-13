@@ -43,7 +43,6 @@ public class CoreUtils {
     public static void handleSchedulersOnEntryDelete(List<EventEntry> deletedEntries) {
         for(EventEntry entry : deletedEntries) {
             deleteEndEntryScheduler(entry);
-            deleteConfirmationCheckScheduler(entry);
         }
     }
 
@@ -55,17 +54,6 @@ public class CoreUtils {
             task.cancel(true);
             schedulersMap.remove(endEntrySchedulerKey);
             entry.setEndEntrySchedulerKey(null);
-        }
-    }
-
-    public static void deleteConfirmationCheckScheduler(EventEntry entry) {
-        Integer confirmationCheckSchedulerKey = entry.getConfirmationCheckSchedulerKey();
-
-        if (confirmationCheckSchedulerKey != null && schedulersMap.containsKey(confirmationCheckSchedulerKey)) {
-            ScheduledFuture<?> task = schedulersMap.get(confirmationCheckSchedulerKey);
-            task.cancel(true);
-            schedulersMap.remove(confirmationCheckSchedulerKey);
-            entry.setConfirmationCheckSchedulerKey(null);
         }
     }
 

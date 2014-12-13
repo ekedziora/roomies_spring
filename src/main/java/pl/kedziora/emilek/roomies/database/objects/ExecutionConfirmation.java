@@ -1,6 +1,8 @@
 package pl.kedziora.emilek.roomies.database.objects;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.hibernate.annotations.Type;
+import org.joda.time.LocalDateTime;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -16,6 +18,9 @@ public class ExecutionConfirmation extends BaseEntity implements Serializable {
 
     @Enumerated(EnumType.STRING)
     private EventEntryStatus status = EventEntryStatus.FINISHED;
+
+    @Type(type="org.jadira.usertype.dateandtime.joda.PersistentLocalDateTime")
+    private LocalDateTime endDateTime;
 
     public EventEntry getEventEntry() {
         return eventEntry;
@@ -33,11 +38,20 @@ public class ExecutionConfirmation extends BaseEntity implements Serializable {
         this.status = status;
     }
 
+    public LocalDateTime getEndDateTime() {
+        return endDateTime;
+    }
+
+    public void setEndDateTime(LocalDateTime endDateTime) {
+        this.endDateTime = endDateTime;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this)
                 .append("eventEntry", eventEntry)
                 .append("status", status)
+                .append("endDateTime", endDateTime)
                 .toString();
     }
 

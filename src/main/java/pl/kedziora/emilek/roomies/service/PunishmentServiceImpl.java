@@ -3,7 +3,6 @@ package pl.kedziora.emilek.roomies.service;
 import com.google.api.client.util.Lists;
 import com.google.common.collect.Iterables;
 import org.joda.time.LocalDate;
-import org.joda.time.LocalDateTime;
 import org.joda.time.Period;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -111,7 +110,7 @@ public class PunishmentServiceImpl implements PunishmentService {
             if(event.getWithPunishment()) {
                 ScheduledFuture<?> task = scheduler.schedule(
                         (Runnable) applicationContext.getBean("entryEndTask", newEntry.getUuid()),
-                        new LocalDateTime().plusSeconds(30).toDate());
+                        end.plusDays(1).toDate());
                 int taskKey = CoreUtils.addTask(task);
                 newEntry.setEndEntrySchedulerKey(taskKey);
             }
