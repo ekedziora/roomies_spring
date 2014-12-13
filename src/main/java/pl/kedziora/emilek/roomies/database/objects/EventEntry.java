@@ -6,11 +6,10 @@ import org.joda.time.LocalDate;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.concurrent.ScheduledFuture;
 
 @Entity
 @Table(name = "event_entries")
-public class EventEntry extends BaseEntity implements Serializable {
+public class EventEntry extends BaseEntity implements Serializable, Comparable<EventEntry> {
 
     private static final long serialVersionUID = 3057969906390599792L;
 
@@ -32,10 +31,10 @@ public class EventEntry extends BaseEntity implements Serializable {
     private Event parent;
 
     @Transient
-    private ScheduledFuture<?> endEntryScheduler;
+    private Integer endEntrySchedulerKey;
 
     @Transient
-    private ScheduledFuture<?> confirmationCheckScheduler;
+    private Integer confirmationCheckSchedulerKey;
 
     public EventEntry() {
     }
@@ -80,20 +79,20 @@ public class EventEntry extends BaseEntity implements Serializable {
         this.parent = parent;
     }
 
-    public ScheduledFuture<?> getEndEntryScheduler() {
-        return endEntryScheduler;
+    public Integer getEndEntrySchedulerKey() {
+        return endEntrySchedulerKey;
     }
 
-    public void setEndEntryScheduler(ScheduledFuture<?> endEntryScheduler) {
-        this.endEntryScheduler = endEntryScheduler;
+    public void setEndEntrySchedulerKey(Integer endEntrySchedulerKey) {
+        this.endEntrySchedulerKey = endEntrySchedulerKey;
     }
 
-    public ScheduledFuture<?> getConfirmationCheckScheduler() {
-        return confirmationCheckScheduler;
+    public Integer getConfirmationCheckSchedulerKey() {
+        return confirmationCheckSchedulerKey;
     }
 
-    public void setConfirmationCheckScheduler(ScheduledFuture<?> confirmationCheckScheduler) {
-        this.confirmationCheckScheduler = confirmationCheckScheduler;
+    public void setConfirmationCheckSchedulerKey(Integer confirmationCheckSchedulerKey) {
+        this.confirmationCheckSchedulerKey = confirmationCheckSchedulerKey;
     }
 
     @Override
@@ -105,5 +104,13 @@ public class EventEntry extends BaseEntity implements Serializable {
                 .append("endDate", endDate)
                 .append("startDate", startDate)
                 .toString();
+    }
+
+    @Override
+    public int compareTo(EventEntry o) {
+        if(o == null || o.getStartDate() == null) {
+            return 1;
+        }
+        return startDate.compareTo(o.getStartDate());
     }
 }

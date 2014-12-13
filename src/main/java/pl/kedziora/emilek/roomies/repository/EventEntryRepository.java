@@ -20,6 +20,6 @@ public interface EventEntryRepository extends JpaRepository<EventEntry, Long> {
 
     EventEntry findByUuid(String uuid);
 
-    List<EventEntry> findByExecutorAndParentAndStartDateGreaterThan(User user, Event event, LocalDate date);
+    List<EventEntry> findByParentAndStartDateGreaterThan(Event event, LocalDate date);
 
 }

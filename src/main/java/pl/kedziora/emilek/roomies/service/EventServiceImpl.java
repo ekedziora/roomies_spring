@@ -16,22 +16,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.kedziora.emilek.json.objects.data.*;
 import pl.kedziora.emilek.json.objects.enums.EventType;
-import pl.kedziora.emilek.json.objects.enums.Interval;
 import pl.kedziora.emilek.json.objects.params.AddEventParams;
 import pl.kedziora.emilek.json.objects.params.DeleteEventParams;
 import pl.kedziora.emilek.json.objects.params.DoneEntryParams;
 import pl.kedziora.emilek.roomies.annotation.Secured;
 import pl.kedziora.emilek.roomies.builder.EventBuilder;
+import pl.kedziora.emilek.roomies.builder.EventEntryBuilder;
 import pl.kedziora.emilek.roomies.database.objects.*;
 import pl.kedziora.emilek.roomies.exception.BadRequestException;
 import pl.kedziora.emilek.roomies.repository.EventEntryRepository;
 import pl.kedziora.emilek.roomies.repository.EventRepository;
 import pl.kedziora.emilek.roomies.repository.UserRepository;
 import pl.kedziora.emilek.roomies.utils.CalendarUtils;
+import pl.kedziora.emilek.roomies.utils.CoreUtils;
 
 import javax.annotation.Nullable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ScheduledFuture;
 
 @Service
 @Transactional
@@ -108,50 +110,40 @@ public class EventServiceImpl implements EventService {
         List<User> executors = generateUsersFromMembers(members);
 
         if(EventType.ONCE.equals(event.getEventType())) {
-            EventEntry eventEntry = new EventEntry();
-            eventEntry.setStartDate(event.getStartDate());
-            eventEntry.setEndDate(event.getEndDate());
-            eventEntry.setParent(event);
-            eventEntry.setExecutor(executors.get(0));
+            EventEntry eventEntry = EventEntryBuilder.anEventEntry()
+                    .withStartDate(event.getStartDate())
+                    .withEndDate(event.getEndDate())
+                    .withExecutor(executors.get(0))
+                    .withParent(event)
+                    .build();
+
             entries.add(eventEntry);
         }
         else {
-            Interval intervalType = event.getEventInterval();
-            Integer intervalNumber = event.getIntervalNumber();
             LocalDate start = event.getStartDate();
             LocalDate end = event.getEndDate();
-            Period period = new Period(start, end);
-
-            switch (intervalType) {
-                case DAYS:
-                    period = period.plus(Period.days(intervalNumber));
-                    break;
-                case WEEKS:
-                    period = period.plus(Period.weeks(intervalNumber));
-                    break;
-                case MONTHS:
-                    period = period.plus(Period.months(intervalNumber));
-                    break;
-                case YEARS:
-                    period = period.plus(Period.years(intervalNumber));
-                    break;
-            }
+            Period period = CoreUtils.createCyclicEventPeriod(start, end, event.getEventInterval(), event.getIntervalNumber());
 
             Iterator<User> cycleIterator = Iterables.cycle(executors).iterator();
             ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
             scheduler.initialize();
 
             for(; end.isBefore(CalendarUtils.MAGIC_END_DATE); start = start.plus(period), end = end.plus(period)) {
-                final EventEntry eventEntry = new EventEntry();
-                eventEntry.setStartDate(start);
-                eventEntry.setEndDate(end);
-                eventEntry.setParent(event);
-                eventEntry.setExecutor(cycleIterator.next());
+                EventEntry eventEntry = EventEntryBuilder.anEventEntry()
+                        .withStartDate(start)
+                        .withEndDate(end)
+                        .withExecutor(cycleIterator.next())
+                        .withParent(event)
+                        .build();
+
                 if(event.getWithPunishment()) {
-                    eventEntry.setEndEntryScheduler(
-                            scheduler.schedule((Runnable) applicationContext.getBean("entryEndTask", eventEntry.getUuid()),
-                            new LocalDateTime().plusSeconds(30).toDate()));
+                    ScheduledFuture<?> task = scheduler.schedule(
+                            (Runnable) applicationContext.getBean("entryEndTask", eventEntry.getUuid()),
+                            new LocalDateTime().plusSeconds(30).toDate());
+                    int taskKey = CoreUtils.addTask(task);
+                    eventEntry.setEndEntrySchedulerKey(taskKey);
                 }
+
                 entries.add(eventEntry);
             }
         }
@@ -159,7 +151,7 @@ public class EventServiceImpl implements EventService {
         return entries;
     }
 
-    private List<User> generateUsersFromMembers(final List<MemberToAddData> members) {
+    private List<User> generateUsersFromMembers(List<MemberToAddData> members) {
         return Lists.newArrayList(
                 Collections2.transform(members, new Function<MemberToAddData, User>() {
                     @Override
