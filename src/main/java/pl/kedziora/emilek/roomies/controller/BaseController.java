@@ -26,11 +26,7 @@ import pl.kedziora.emilek.json.objects.response.UserAccountDataResponse;
 import pl.kedziora.emilek.json.utils.CoreUtils;
 import pl.kedziora.emilek.roomies.builder.UserBuilder;
 import pl.kedziora.emilek.roomies.database.objects.User;
-import pl.kedziora.emilek.roomies.exception.BadRequestException;
-import pl.kedziora.emilek.roomies.exception.ConflictException;
-import pl.kedziora.emilek.roomies.exception.ForbiddenException;
-import pl.kedziora.emilek.roomies.exception.InternalServerErrorException;
-import pl.kedziora.emilek.roomies.exception.UnauthorizedException;
+import pl.kedziora.emilek.roomies.exception.*;
 import pl.kedziora.emilek.roomies.service.UserService;
 
 import java.io.IOException;
@@ -112,7 +108,7 @@ public abstract class BaseController {
     }
 
     private boolean refreshAndSaveToken(String refreshToken, String mail) {
-        String url = "https://accounts.google.com/o/oauth2/token";
+        String url = "https://www.googleapis.com/oauth2/v3/token";
         HttpClient client = HttpClientBuilder.create().build();
         HttpPost request = new HttpPost(url);
 

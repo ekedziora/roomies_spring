@@ -9,14 +9,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.kedziora.emilek.json.objects.data.ConfirmationData;
 import pl.kedziora.emilek.json.objects.data.DashboardData;
+import pl.kedziora.emilek.json.objects.data.SingleAnnouncementData;
 import pl.kedziora.emilek.roomies.annotation.Secured;
-import pl.kedziora.emilek.roomies.database.objects.EventEntryStatus;
-import pl.kedziora.emilek.roomies.database.objects.ExecutionConfirmation;
-import pl.kedziora.emilek.roomies.database.objects.Group;
-import pl.kedziora.emilek.roomies.database.objects.User;
+import pl.kedziora.emilek.roomies.database.objects.*;
 import pl.kedziora.emilek.roomies.exception.BadRequestException;
 import pl.kedziora.emilek.roomies.repository.ConfirmationRepository;
 import pl.kedziora.emilek.roomies.repository.UserRepository;
+import pl.kedziora.emilek.roomies.utils.CoreUtils;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -40,14 +39,17 @@ public class DashboardServiceImpl implements DashboardService {
         Group group = user.getGroup();
 
         if(group == null) {
-            return new DashboardData(null);
+            return new DashboardData();
         }
 
         List<ExecutionConfirmation> userConfirmations =
                 confirmationRepository.findByEventEntry_ExecutorNotAndEventEntry_Parent_MembersAndEndDateTimeGreaterThanAndStatus(user, user, new LocalDateTime(), EventEntryStatus.FINISHED);
         List<ConfirmationData> confirmations = generateConfirmationDatas(userConfirmations);
 
-        return new DashboardData(confirmations);
+        List<Announcement> announcements = group.getAnnouncements();
+        List<SingleAnnouncementData> announcementData = CoreUtils.generateAnnouncementData(announcements);
+
+        return new DashboardData(confirmations, announcementData);
     }
 
     private List<ConfirmationData> generateConfirmationDatas(List<ExecutionConfirmation> userConfirmations) {

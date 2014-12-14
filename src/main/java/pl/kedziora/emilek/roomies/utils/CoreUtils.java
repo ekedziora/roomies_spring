@@ -1,11 +1,17 @@
 package pl.kedziora.emilek.roomies.utils;
 
+import com.google.api.client.util.Lists;
 import com.google.api.client.util.Maps;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
+import pl.kedziora.emilek.json.objects.data.SingleAnnouncementData;
 import pl.kedziora.emilek.json.objects.enums.Interval;
+import pl.kedziora.emilek.roomies.database.objects.Announcement;
 import pl.kedziora.emilek.roomies.database.objects.EventEntry;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
@@ -61,6 +67,22 @@ public class CoreUtils {
         int taskKey = task.hashCode();
         schedulersMap.put(taskKey, task);
         return taskKey;
+    }
+
+    public static List<SingleAnnouncementData> generateAnnouncementData(List<Announcement> announcements) {
+        return Lists.newArrayList(
+                Collections2.transform(announcements, new Function<Announcement, SingleAnnouncementData>() {
+                    @Override
+                    public SingleAnnouncementData apply(@Nullable Announcement announcement) {
+                        String userName = null;
+                        if (!announcement.getAnonymous()) {
+                            userName = announcement.getUser().getName();
+                        }
+                        return new SingleAnnouncementData(announcement.getId(), announcement.getTitle(), userName,
+                                announcement.getContent(), announcement.getUser().getId());
+                    }
+                })
+        );
     }
 
 }
