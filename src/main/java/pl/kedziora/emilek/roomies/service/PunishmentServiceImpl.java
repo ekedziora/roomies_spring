@@ -49,13 +49,13 @@ public class PunishmentServiceImpl implements PunishmentService {
                 financialPunishment.setPaymentGroup(group.getPaymentGroups().first());
                 financialPunishment.setUser(eventEntry.getExecutor());
                 financialPunishmentRepository.save(financialPunishment);
-                eventEntry.setEventEntryStatus(EventEntryStatus.FINISHED);
+                eventEntry.setEventEntryStatus(EventEntryStatus.NOT_DONE);
             }
         }
         else {
             Group group = eventEntry.getExecutor().getGroup();
             if(group != null) {
-                eventEntry.setEventEntryStatus(EventEntryStatus.NOT_FINISHED);
+                eventEntry.setEventEntryStatus(EventEntryStatus.NOT_DONE);
 
                 if(event.getEventType().equals(EventType.ONCE)) {
                     Period entryPeriod = new Period(eventEntry.getStartDate(), eventEntry.getEndDate());

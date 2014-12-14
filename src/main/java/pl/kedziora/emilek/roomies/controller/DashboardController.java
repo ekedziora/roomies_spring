@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import pl.kedziora.emilek.json.objects.data.DashboardData;
+import pl.kedziora.emilek.json.objects.params.NotDoneEntryParams;
 import pl.kedziora.emilek.json.objects.params.RequestParams;
 import pl.kedziora.emilek.roomies.service.DashboardService;
 
@@ -21,6 +22,14 @@ public class DashboardController extends BaseController {
         preHandle(params);
 
         return dashboardService.getDashboardData(params.getMail());
+    }
+
+    @RequestMapping(value = "notDone", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.OK)
+    public void notDoneEntry(@RequestBody NotDoneEntryParams params) {
+        preHandle(params.getRequestParams());
+
+        dashboardService.notDoneEntry(params.getConfirmationId(), params.getRequestParams().getMail());
     }
 
 }

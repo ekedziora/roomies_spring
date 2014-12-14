@@ -263,7 +263,7 @@ public class EventServiceImpl implements EventService {
             throw new BadRequestException();
         }
 
-        eventEntry.setEventEntryStatus(EventEntryStatus.FINISHED);
+        eventEntry.setEventEntryStatus(EventEntryStatus.WAITING_FOR_CONFIRMATION);
         CoreUtils.deleteEndEntryScheduler(eventEntry);
         if(eventEntry.getParent().getWithPunishment()) {
             ExecutionConfirmation confirmation = new ExecutionConfirmation();

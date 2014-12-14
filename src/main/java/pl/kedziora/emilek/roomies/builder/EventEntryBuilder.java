@@ -13,7 +13,6 @@ public class EventEntryBuilder {
     private User executor;
     private Event parent;
     private Integer endEntrySchedulerKey;
-    private Integer confirmationCheckSchedulerKey;
 
     private EventEntryBuilder() {
     }
@@ -52,13 +51,8 @@ public class EventEntryBuilder {
         return this;
     }
 
-    public EventEntryBuilder withConfirmationCheckSchedulerKey(Integer confirmationCheckSchedulerKey) {
-        this.confirmationCheckSchedulerKey = confirmationCheckSchedulerKey;
-        return this;
-    }
-
     public EventEntryBuilder but() {
-        return anEventEntry().withStartDate(startDate).withEndDate(endDate).withEventEntryStatus(eventEntryStatus).withExecutor(executor).withParent(parent).withEndEntrySchedulerKey(endEntrySchedulerKey).withConfirmationCheckSchedulerKey(confirmationCheckSchedulerKey);
+        return anEventEntry().withStartDate(startDate).withEndDate(endDate).withEventEntryStatus(eventEntryStatus).withExecutor(executor).withParent(parent).withEndEntrySchedulerKey(endEntrySchedulerKey);
     }
 
     public EventEntry build() {
@@ -69,7 +63,6 @@ public class EventEntryBuilder {
         eventEntry.setExecutor(executor);
         eventEntry.setParent(parent);
         eventEntry.setEndEntrySchedulerKey(endEntrySchedulerKey);
-        eventEntry.setConfirmationCheckSchedulerKey(confirmationCheckSchedulerKey);
         return eventEntry;
     }
 }

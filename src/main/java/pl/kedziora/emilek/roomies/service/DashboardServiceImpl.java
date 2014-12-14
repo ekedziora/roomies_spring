@@ -9,9 +9,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.kedziora.emilek.json.objects.data.ConfirmationData;
 import pl.kedziora.emilek.json.objects.data.DashboardData;
+import pl.kedziora.emilek.roomies.annotation.Secured;
+import pl.kedziora.emilek.roomies.database.objects.EventEntryStatus;
 import pl.kedziora.emilek.roomies.database.objects.ExecutionConfirmation;
 import pl.kedziora.emilek.roomies.database.objects.Group;
 import pl.kedziora.emilek.roomies.database.objects.User;
+import pl.kedziora.emilek.roomies.exception.BadRequestException;
 import pl.kedziora.emilek.roomies.repository.ConfirmationRepository;
 import pl.kedziora.emilek.roomies.repository.UserRepository;
 
@@ -28,6 +31,9 @@ public class DashboardServiceImpl implements DashboardService {
     @Autowired
     private ConfirmationRepository confirmationRepository;
 
+    @Autowired
+    private PunishmentService punishmentService;
+
     @Override
     public DashboardData getDashboardData(String mail) {
         User user = userRepository.findUserByMail(mail);
@@ -38,7 +44,7 @@ public class DashboardServiceImpl implements DashboardService {
         }
 
         List<ExecutionConfirmation> userConfirmations =
-                confirmationRepository.findByEventEntry_ExecutorNotAndEventEntry_Parent_MembersAndEndDateTimeGreaterThan(user, user, new LocalDateTime());
+                confirmationRepository.findByEventEntry_ExecutorNotAndEventEntry_Parent_MembersAndEndDateTimeGreaterThanAndStatus(user, user, new LocalDateTime(), EventEntryStatus.FINISHED);
         List<ConfirmationData> confirmations = generateConfirmationDatas(userConfirmations);
 
         return new DashboardData(confirmations);
@@ -54,6 +60,26 @@ public class DashboardServiceImpl implements DashboardService {
                     }
                 })
         );
+    }
+
+    @Override
+    @Secured("Confirmation after end date or user not allowed objects")
+    public void notDoneEntry(Long confirmationId, String mail) {
+        User user = userRepository.findUserByMail(mail);
+        Group group = user.getGroup();
+        if(group == null) {
+            throw new BadRequestException();
+        }
+
+        ExecutionConfirmation confirmation = confirmationRepository.findOne(confirmationId);
+
+        if(!confirmation.getEventEntry().getParent().getMembers().contains(user) ||
+                confirmation.getEndDateTime().isBefore(new LocalDateTime())) {
+            throw new BadRequestException();
+        }
+
+        confirmation.setStatus(EventEntryStatus.NOT_DONE);
+        punishmentService.executePunishment(confirmation.getEventEntry());
     }
 
 }
