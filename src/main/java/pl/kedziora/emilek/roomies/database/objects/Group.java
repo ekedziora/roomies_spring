@@ -38,6 +38,9 @@ public class Group extends BaseEntity implements Serializable {
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
     private List<Event> events;
 
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL)
+    private List<Announcement> announcements;
+
     public Group() {}
 
     public String getName() {
@@ -96,6 +99,14 @@ public class Group extends BaseEntity implements Serializable {
         this.events = events;
     }
 
+    public List<Announcement> getAnnouncements() {
+        return announcements;
+    }
+
+    public void setAnnouncements(List<Announcement> announcements) {
+        this.announcements = announcements;
+    }
+
     @Override
     public String toString() {
         return new ToStringBuilder(this)
@@ -106,6 +117,7 @@ public class Group extends BaseEntity implements Serializable {
                 .append("members", members)
                 .append("paymentGroups", paymentGroups)
                 .append("events", events)
+                .append("announcements", announcements)
                 .toString();
     }
 
