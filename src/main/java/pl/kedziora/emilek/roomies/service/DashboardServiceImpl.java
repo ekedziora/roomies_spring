@@ -81,6 +81,7 @@ public class DashboardServiceImpl implements DashboardService {
         }
 
         confirmation.setStatus(EventEntryStatus.NOT_DONE);
+        CoreUtils.deleteEndConfirmationScheduler(confirmation.getEventEntry());
         punishmentService.executePunishment(confirmation.getEventEntry());
     }
 

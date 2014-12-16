@@ -12,11 +12,11 @@ import java.util.List;
 
 public interface EventEntryRepository extends JpaRepository<EventEntry, Long> {
 
-    List<EventEntry> findByExecutorAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndEventEntryStatus(User user, LocalDate date, LocalDate date2, EventEntryStatus status);
+    List<EventEntry> findByExecutorAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndEventEntryStatusOrderByStartDateAsc(User user, LocalDate date, LocalDate date2, EventEntryStatus status);
 
-    List<EventEntry> findByExecutorAndStartDateGreaterThan(User user, LocalDate date, Pageable pageable);
+    List<EventEntry> findByExecutorAndStartDateGreaterThanOrderByStartDateAsc(User user, LocalDate date, Pageable pageable);
 
-    List<EventEntry> findByExecutor(User user);
+    List<EventEntry> findByExecutorOrderByStartDateAsc(User user);
 
     EventEntry findByUuid(String uuid);
 

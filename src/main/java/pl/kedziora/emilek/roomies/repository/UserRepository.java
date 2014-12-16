@@ -10,8 +10,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     User findUserByMail(String mail);
 
-    List<User> findByGroupIsNullAndMailNot(String mail);
+    List<User> findByGroupIsNullAndMailNotAndVerified(String mail, Boolean verified);
 
-    List<User> findByGroupOrGroupIsNull(Group group);
+    List<User> findByGroupOrGroupIsNullAndVerified(Group group, Boolean verified);
 
 }

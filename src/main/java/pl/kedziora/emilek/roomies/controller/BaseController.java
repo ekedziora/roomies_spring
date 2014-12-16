@@ -76,6 +76,11 @@ public abstract class BaseController {
             if(!refreshAndSaveToken(user.getRefreshToken(), user.getMail())) {
                 throw new UnauthorizedException();
             }
+
+            user = userService.getUserByMail(params.getMail());
+            if(!isTokenValid(user.getToken())) {
+                throw new UnauthorizedException();
+            }
         }
 
         if(!user.isVerified()) {

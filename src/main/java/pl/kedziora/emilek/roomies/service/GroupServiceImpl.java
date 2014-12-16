@@ -70,7 +70,7 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public List<MemberToAddData> getCreateGroupData(String currentUserMail) {
         List<User> users;
-        users = userRepository.findByGroupIsNullAndMailNot(currentUserMail);
+        users = userRepository.findByGroupIsNullAndMailNotAndVerified(currentUserMail, Boolean.TRUE);
 
         return generateMembersFromUsers(users);
     }
@@ -195,7 +195,7 @@ public class GroupServiceImpl implements GroupService {
         }
 
         List<MemberToAddData> members = generateMembersFromUsers(group.getMembers());
-        List<MemberToAddData> availableMembers = generateMembersFromUsers(userRepository.findByGroupOrGroupIsNull(group));
+        List<MemberToAddData> availableMembers = generateMembersFromUsers(userRepository.findByGroupOrGroupIsNullAndVerified(group, Boolean.TRUE));
 
         User admin = group.getAdmin();
         MemberToAddData adminMember = new MemberToAddData(admin.getName(), admin.getId());

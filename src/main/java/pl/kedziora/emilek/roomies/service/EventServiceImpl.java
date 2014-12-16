@@ -175,8 +175,9 @@ public class EventServiceImpl implements EventService {
         List<EventEntryData> currentEntries = getCurrentEntries(user);
         List<EventEntryData> nextEntries = getNextEntries(user);
         List<SingleEventData> events = getEvents(user);
+        List<EventEntryData> allEntries = getAllEntries(user);
 
-        return new EventData(currentEntries, nextEntries, events);
+        return new EventData(currentEntries, nextEntries, events, allEntries);
     }
 
     private List<SingleEventData> getEvents(User user) {
@@ -187,7 +188,7 @@ public class EventServiceImpl implements EventService {
             public boolean apply(@Nullable Event event) {
                 return EventType.CYCLIC.equals(event.getEventType()) ||
                         EventType.ONCE.equals(event.getEventType()) &&
-                                EventEntryStatus.NOT_FINISHED.equals(event.getEntries().get(0).getEventEntryStatus());
+                                !EventEntryStatus.FINISHED.equals(event.getEntries().get(0).getEventEntryStatus());
             }
         }));
 
@@ -203,15 +204,21 @@ public class EventServiceImpl implements EventService {
     }
 
     private List<EventEntryData> getNextEntries(User user) {
-        List<EventEntry> nextEntries = eventEntryRepository.findByExecutorAndStartDateGreaterThan(user, new LocalDate(), new PageRequest(0, 10));
+        List<EventEntry> nextEntries = eventEntryRepository.findByExecutorAndStartDateGreaterThanOrderByStartDateAsc(user, new LocalDate(), new PageRequest(0, 10));
 
         return generateEventEntryData(nextEntries);
     }
 
     private List<EventEntryData> getCurrentEntries(User user) {
-        List<EventEntry> currentEntries = eventEntryRepository.findByExecutorAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndEventEntryStatus(user, new LocalDate(), new LocalDate(), EventEntryStatus.NOT_FINISHED);
+        List<EventEntry> currentEntries = eventEntryRepository.findByExecutorAndStartDateLessThanEqualAndEndDateGreaterThanEqualAndEventEntryStatusOrderByStartDateAsc(user, new LocalDate(), new LocalDate(), EventEntryStatus.NOT_FINISHED);
 
         return generateEventEntryData(currentEntries);
+    }
+
+    private List<EventEntryData> getAllEntries(User user) {
+        List<EventEntry> entries = eventEntryRepository.findByExecutorOrderByStartDateAsc(user);
+
+        return generateEventEntryData(entries);
     }
 
     private List<EventEntryData> generateEventEntryData(List<EventEntry> entries) {
@@ -220,23 +227,10 @@ public class EventServiceImpl implements EventService {
                     @Override
                     public EventEntryData apply(@Nullable EventEntry eventEntry) {
                         return new EventEntryData(eventEntry.getId(), eventEntry.getParent().getEventName(), eventEntry.getStartDate().toString(),
-                                eventEntry.getEndDate().toString(), eventEntry.getEventEntryStatus().getLabel());
+                                eventEntry.getEndDate().toString(), eventEntry.getEventEntryStatus().getLabel(), eventEntry.getParent().getWithPunishment());
                     }
                 })
         );
-    }
-
-    @Override
-    public List<EventEntryData> getAllEntriesForUser(String mail) {
-        User user = userRepository.findUserByMail(mail);
-        Group group = user.getGroup();
-
-        if(group == null) {
-            throw new BadRequestException();
-        }
-
-        List<EventEntry> entries = eventEntryRepository.findByExecutor(user);
-        return generateEventEntryData(entries);
     }
 
     @Override
@@ -265,10 +259,22 @@ public class EventServiceImpl implements EventService {
 
         eventEntry.setEventEntryStatus(EventEntryStatus.WAITING_FOR_CONFIRMATION);
         CoreUtils.deleteEndEntryScheduler(eventEntry);
+
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.initialize();
+
         if(eventEntry.getParent().getWithPunishment()) {
+            LocalDateTime endDateTime = new LocalDateTime().plusHours(eventEntry.getParent().getConfirmationNumber());
+
+            ScheduledFuture<?> task = scheduler.schedule(
+                    (Runnable) applicationContext.getBean("confirmationEndTask", eventEntry.getUuid()),
+                    endDateTime.toDate());
+            int taskKey = CoreUtils.addTask(task);
+            eventEntry.setEndConfirmationSchedulerKey(taskKey);
+
             ExecutionConfirmation confirmation = new ExecutionConfirmation();
             confirmation.setEventEntry(eventEntry);
-            confirmation.setEndDateTime(new LocalDateTime().plusHours(eventEntry.getParent().getConfirmationNumber()));
+            confirmation.setEndDateTime(endDateTime);
             eventEntry.setConfirmation(confirmation);
         }
 
