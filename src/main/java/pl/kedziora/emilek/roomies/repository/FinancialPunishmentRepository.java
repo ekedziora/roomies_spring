@@ -11,4 +11,5 @@ public interface FinancialPunishmentRepository extends JpaRepository<FinancialPu
 
     List<FinancialPunishment> findByUserAndPaymentGroup(User user, PaymentGroup paymentGroup);
 
+    List<FinancialPunishment> findByPaymentGroup(PaymentGroup paymentGroup);
 }

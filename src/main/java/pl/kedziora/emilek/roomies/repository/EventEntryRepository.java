@@ -16,7 +16,7 @@ public interface EventEntryRepository extends JpaRepository<EventEntry, Long> {
 
     List<EventEntry> findByExecutorAndStartDateGreaterThanOrderByStartDateAsc(User user, LocalDate date, Pageable pageable);
 
-    List<EventEntry> findByExecutorOrderByStartDateAsc(User user);
+    List<EventEntry> findByParent_MembersOrderByStartDateAsc(User user);
 
     EventEntry findByUuid(String uuid);
 

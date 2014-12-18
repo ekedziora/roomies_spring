@@ -216,7 +216,7 @@ public class EventServiceImpl implements EventService {
     }
 
     private List<EventEntryData> getAllEntries(User user) {
-        List<EventEntry> entries = eventEntryRepository.findByExecutorOrderByStartDateAsc(user);
+        List<EventEntry> entries = eventEntryRepository.findByParent_MembersOrderByStartDateAsc(user);
 
         return generateEventEntryData(entries);
     }
@@ -227,7 +227,8 @@ public class EventServiceImpl implements EventService {
                     @Override
                     public EventEntryData apply(@Nullable EventEntry eventEntry) {
                         return new EventEntryData(eventEntry.getId(), eventEntry.getParent().getEventName(), eventEntry.getStartDate().toString(),
-                                eventEntry.getEndDate().toString(), eventEntry.getEventEntryStatus().getLabel(), eventEntry.getParent().getWithPunishment());
+                                eventEntry.getEndDate().toString(), eventEntry.getEventEntryStatus().getLabel(),
+                                eventEntry.getExecutor().getName(), eventEntry.getParent().getWithPunishment());
                     }
                 })
         );

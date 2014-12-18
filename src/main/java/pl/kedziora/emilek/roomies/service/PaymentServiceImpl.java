@@ -10,15 +10,14 @@ import pl.kedziora.emilek.json.objects.data.BudgetData;
 import pl.kedziora.emilek.json.objects.data.PaymentData;
 import pl.kedziora.emilek.json.objects.params.AddPaymentParams;
 import pl.kedziora.emilek.roomies.annotation.Secured;
-import pl.kedziora.emilek.roomies.database.objects.Group;
-import pl.kedziora.emilek.roomies.database.objects.Payment;
-import pl.kedziora.emilek.roomies.database.objects.PaymentGroup;
-import pl.kedziora.emilek.roomies.database.objects.User;
+import pl.kedziora.emilek.roomies.database.objects.*;
 import pl.kedziora.emilek.roomies.exception.BadRequestException;
+import pl.kedziora.emilek.roomies.repository.FinancialPunishmentRepository;
 import pl.kedziora.emilek.roomies.repository.PaymentGroupRepository;
 import pl.kedziora.emilek.roomies.repository.PaymentRepository;
 import pl.kedziora.emilek.roomies.repository.UserRepository;
 
+import javax.annotation.Nullable;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.SortedSet;
@@ -39,6 +38,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     private PaymentGroupService paymentGroupService;
 
+    @Autowired
+    private FinancialPunishmentRepository financialPunishmentRepository;
+
     @Override
     public BudgetData getBudgetData(String mail) {
         User user = userRepository.findUserByMail(mail);
@@ -51,9 +53,13 @@ public class PaymentServiceImpl implements PaymentService {
         PaymentGroup firstPaymentGroup = createPaymentGroupIfNotExistsOrReturnExistingOne(group);
 
         List<Payment> payments = paymentRepository.findByPaymentGroup(firstPaymentGroup);
+        List<FinancialPunishment> punishments = financialPunishmentRepository.findByPaymentGroup(firstPaymentGroup);
+
         BigDecimal balance = paymentGroupService.calculateUserBalance(firstPaymentGroup, user);
 
         List<PaymentData> paymentDatas = generatePaymentDatasFromPayments(payments);
+        List<PaymentData> punishmentDatas = generatePunishmentDatasFromPunishments(punishments);
+        paymentDatas.addAll(punishmentDatas);
 
         return new BudgetData(user.getId(), balance, paymentDatas);
     }
@@ -79,6 +85,18 @@ public class PaymentServiceImpl implements PaymentService {
                         User user = payment.getUser();
                         return new PaymentData(payment.getId(), payment.getDescription(), user.getName(), user.getId(),
                                 payment.getAmount());
+                    }
+                })
+        );
+    }
+
+    private List<PaymentData> generatePunishmentDatasFromPunishments(List<FinancialPunishment> punishments) {
+        return Lists.newArrayList(
+                Collections2.transform(punishments, new Function<FinancialPunishment, PaymentData>() {
+                    @Override
+                    public PaymentData apply(@Nullable FinancialPunishment financialPunishment) {
+                        return new PaymentData(null, "Financial punishment", financialPunishment.getUser().getName(), null,
+                                financialPunishment.getAmount().negate());
                     }
                 })
         );
